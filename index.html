@@ -1,0 +1,1617 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent Daily Workflow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-deep:    #0A0E1A;
+    --bg-card:    #111827;
+    --bg-surface: #1E293B;
+    --border:     #1E293B;
+    --border-glow:#3B82F6;
+    --text:       #E2E8F0;
+    --text-muted: #94A3B8;
+    --text-dim:   #64748B;
+    --blue:       #3B82F6;
+    --cyan:       #06B6D4;
+    --green:      #10B981;
+    --amber:      #F59E0B;
+    --purple:     #8B5CF6;
+    --rose:       #F43F5E;
+    --font-mono:  'Fira Code', monospace;
+    --font-sans:  'Fira Sans', sans-serif;
+  }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  /* Scanlines */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.02) 2px, rgba(0,0,0,0.02) 4px);
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .wrapper { position: relative; z-index: 1; }
+
+  /* ── HEADER ───────────────────────────────────────────── */
+  .header {
+    text-align: center;
+    padding: 52px 24px 20px;
+  }
+  .header-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--cyan);
+    background: rgba(6,182,212,0.08);
+    border: 1px solid rgba(6,182,212,0.2);
+    border-radius: 20px;
+    padding: 6px 16px;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .header-tag .pulse {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .header h1 {
+    font-family: var(--font-mono);
+    font-size: clamp(26px, 4vw, 42px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+  }
+  .header h1 .hl {
+    color: var(--blue);
+    text-shadow: 0 0 30px rgba(59,130,246,0.25);
+  }
+  .header p {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  /* ── STATUS BAR ───────────────────────────────────────── */
+  .status-bar {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    padding: 14px 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    border-top: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    margin-bottom: 44px;
+    flex-wrap: wrap;
+  }
+  .status-bar .dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .dot-g { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot-b { background: var(--blue);  box-shadow: 0 0 6px var(--blue);  }
+  .dot-a { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+
+  /* ── CONTAINER ────────────────────────────────────────── */
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+  }
+
+  /* ── AGENT HUB ────────────────────────────────────────── */
+  .agent-hub {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 44px;
+    flex-wrap: wrap;
+  }
+  .hub-core {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #1E3A5F, var(--bg-deep));
+    border: 2px solid var(--blue);
+    box-shadow: 0 0 40px rgba(59,130,246,0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: glow 3s ease-in-out infinite;
+  }
+  @keyframes glow {
+    0%,100% { box-shadow: 0 0 30px rgba(59,130,246,0.15); }
+    50% { box-shadow: 0 0 50px rgba(59,130,246,0.3); }
+  }
+  .hub-core svg { width: 32px; height: 32px; stroke: var(--cyan); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .hub-core span {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--cyan);
+    margin-top: 5px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .ptag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--bg-surface);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 4px;
+    padding: 5px 12px;
+  }
+
+  /* ── ARROW from hub to flows ──────────────────────────── */
+  .hub-arrows {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+    position: relative;
+    height: 40px;
+  }
+  .hub-arrows::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 20px;
+    background: var(--text-dim);
+  }
+  .hub-arrows::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: calc(16.66% + 12px);
+    right: calc(16.66% + 12px);
+    height: 1px;
+    background: var(--text-dim);
+  }
+  .hub-arrows .vl {
+    position: absolute;
+    top: 20px;
+    width: 1px;
+    height: 20px;
+    background: var(--text-dim);
+  }
+  .hub-arrows .vl:nth-child(1) { left: calc(16.66% + 12px); }
+  .hub-arrows .vl:nth-child(2) { left: 50%; }
+  .hub-arrows .vl:nth-child(3) { right: calc(16.66% + 12px); }
+  .hub-arrows .arr {
+    position: absolute;
+    bottom: -1px;
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--text-dim);
+  }
+  .hub-arrows .arr:nth-child(4) { left: calc(16.66% + 7px); }
+  .hub-arrows .arr:nth-child(5) { left: calc(50% - 5px); }
+  .hub-arrows .arr:nth-child(6) { right: calc(16.66% + 7px); }
+
+  /* ── FLOW CARDS GRID ──────────────────────────────────── */
+  .flows {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 900px) { .flows { grid-template-columns: 1fr; } }
+
+  /* ── FLOW CARD ────────────────────────────────────────── */
+  .fc {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .fc:hover {
+    border-color: rgba(59,130,246,0.3);
+    box-shadow: 0 4px 24px rgba(59,130,246,0.06);
+  }
+
+  .fc-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    position: relative;
+  }
+  .fc-head::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .fc:nth-child(1) .fc-head::before { background: linear-gradient(90deg, var(--blue), var(--cyan)); }
+  .fc:nth-child(2) .fc-head::before { background: linear-gradient(90deg, var(--purple), var(--rose)); }
+  .fc:nth-child(3) .fc-head::before { background: linear-gradient(90deg, var(--green), var(--amber)); }
+
+  .fc-ico {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .fc-ico svg { width: 20px; height: 20px; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .fc:nth-child(1) .fc-ico { background: rgba(59,130,246,0.12); }
+  .fc:nth-child(1) .fc-ico svg { stroke: var(--blue); }
+  .fc:nth-child(2) .fc-ico { background: rgba(139,92,246,0.12); }
+  .fc:nth-child(2) .fc-ico svg { stroke: var(--purple); }
+  .fc:nth-child(3) .fc-ico { background: rgba(16,185,129,0.12); }
+  .fc:nth-child(3) .fc-ico svg { stroke: var(--green); }
+
+  .fc-title { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+  .fc-sub { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .fc-body { padding: 20px; }
+
+  /* ── STEP NODE ────────────────────────────────────────── */
+  .st {
+    display: flex;
+    gap: 12px;
+    position: relative;
+    padding-bottom: 18px;
+  }
+  .st:last-child { padding-bottom: 0; }
+  .st:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 14px; top: 32px; bottom: 0;
+    width: 1px;
+    background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 3px, transparent 3px, transparent 7px);
+  }
+  .st-m {
+    width: 29px; height: 29px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .fc:nth-child(1) .st-m { background: rgba(59,130,246,0.12); color: var(--blue); border: 1px solid rgba(59,130,246,0.25); }
+  .fc:nth-child(2) .st-m { background: rgba(139,92,246,0.12); color: var(--purple); border: 1px solid rgba(139,92,246,0.25); }
+  .fc:nth-child(3) .st-m { background: rgba(16,185,129,0.12); color: var(--green); border: 1px solid rgba(16,185,129,0.25); }
+
+  .st-c { flex: 1; min-width: 0; }
+  .st-l { font-family: var(--font-mono); font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+  .st-d { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+
+  /* Tool badges */
+  .tbs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+  .tb {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .tb-mcp { border-color: rgba(59,130,246,0.25); color: var(--blue); }
+  .tb-ai  { border-color: rgba(6,182,212,0.25);  color: var(--cyan); }
+  .tb-obs { border-color: rgba(139,92,246,0.25); color: var(--purple); }
+  .tb-out { border-color: rgba(16,185,129,0.25); color: var(--green); }
+
+  /* Output box — visual cards */
+  .fo {
+    margin-top: 16px;
+    padding: 14px;
+    background: var(--bg-deep);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .fo-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .fo-label::before {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+  }
+  .fo-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* Individual output item card */
+  .fo-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 6px;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: default;
+  }
+  .fo-item:hover {
+    border-color: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.04);
+  }
+  .fo-item[data-preview] { cursor: pointer; }
+  .fo-item[data-preview]:hover { border-color: rgba(59,130,246,0.3); }
+
+  /* Output icon */
+  .fo-ico {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .fo-ico svg { width: 15px; height: 15px; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .fo-ico--md  { background: rgba(59,130,246,0.12); }
+  .fo-ico--md svg  { stroke: var(--blue); }
+  .fo-ico--chart { background: rgba(245,158,11,0.12); }
+  .fo-ico--chart svg { stroke: var(--amber); }
+  .fo-ico--json { background: rgba(6,182,212,0.12); }
+  .fo-ico--json svg { stroke: var(--cyan); }
+  .fo-ico--note { background: rgba(139,92,246,0.12); }
+  .fo-ico--note svg { stroke: var(--purple); }
+  .fo-ico--task { background: rgba(244,63,94,0.12); }
+  .fo-ico--task svg { stroke: var(--rose); }
+  .fo-ico--bell { background: rgba(16,185,129,0.12); }
+  .fo-ico--bell svg { stroke: var(--green); }
+  .fo-ico--cal  { background: rgba(245,158,11,0.12); }
+  .fo-ico--cal svg  { stroke: var(--amber); }
+  .fo-ico--slack { background: rgba(16,185,129,0.12); }
+  .fo-ico--slack svg { stroke: var(--green); }
+
+  /* Output text content */
+  .fo-txt { flex: 1; min-width: 0; }
+  .fo-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .fo-desc {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+
+  /* File type badge */
+  .fo-type {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+  .fo-type--md    { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .fo-type--chart { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .fo-type--json  { background: rgba(6,182,212,0.15);  color: var(--cyan); }
+  .fo-type--api   { background: rgba(139,92,246,0.15); color: var(--purple); }
+  .fo-type--auto  { background: rgba(16,185,129,0.15); color: var(--green); }
+  .fo-type--slack { background: rgba(244,63,94,0.15);  color: var(--rose); }
+
+  /* Status indicator dot */
+  .fo-status {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--green);
+    box-shadow: 0 0 6px rgba(16,185,129,0.5);
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  /* ── CONVERGENCE ──────────────────────────────────────── */
+  .conv {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 44px;
+    gap: 14px;
+  }
+  .conv-lines {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    max-width: 960px;
+    height: 36px;
+    position: relative;
+  }
+  .conv-lines::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 16.66%;
+    right: 16.66%;
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+  .conv-lines .vl2 {
+    position: absolute;
+    bottom: 0;
+    width: 1px;
+    height: 36px;
+    background: rgba(255,255,255,0.08);
+  }
+  .conv-lines .vl2:nth-child(1) { left: 16.66%; }
+  .conv-lines .vl2:nth-child(2) { left: 50%; }
+  .conv-lines .vl2:nth-child(3) { right: 16.66%; }
+  .conv-arrow {
+    width: 1px;
+    height: 20px;
+    background: rgba(255,255,255,0.08);
+    position: relative;
+  }
+  .conv-arrow::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: -4px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--text-dim);
+  }
+
+  /* Result card */
+  .res {
+    background: var(--bg-card);
+    border: 1px solid rgba(16,185,129,0.3);
+    border-radius: 12px;
+    padding: 24px 36px;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(16,185,129,0.06);
+    max-width: 640px;
+  }
+  .res h3 {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 12px;
+  }
+  .res-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .res-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.2);
+    color: var(--green);
+  }
+
+  /* ── FOOTER ───────────────────────────────────────────── */
+  .footer {
+    text-align: center;
+    padding: 36px 24px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    border-top: 1px solid rgba(255,255,255,0.04);
+    margin-top: 48px;
+  }
+  .footer span { color: var(--blue); }
+
+  /* ── ANIMATIONS ───────────────────────────────────────── */
+  @keyframes up { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+  .fc:nth-child(1) { animation: up .5s .1s both; }
+  .fc:nth-child(2) { animation: up .5s .25s both; }
+  .fc:nth-child(3) { animation: up .5s .4s both; }
+  .conv { animation: up .5s .55s both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01s !important; }
+  }
+
+  /* ── MODAL OVERLAY ────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Modal window — terminal style */
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid rgba(59,130,246,0.25);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 640px;
+    max-height: 85vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 60px rgba(59,130,246,0.1);
+    transform: translateY(16px) scale(0.97);
+    transition: transform 0.25s;
+  }
+  .modal-overlay.active .modal {
+    transform: translateY(0) scale(1);
+  }
+
+  /* Terminal title bar */
+  .modal-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .modal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .modal-dot--r { background: #FF5F57; cursor: pointer; }
+  .modal-dot--r:hover { background: #FF3B30; }
+  .modal-dot--y { background: #FEBC2E; }
+  .modal-dot--g { background: #28C840; }
+  .modal-bar-title {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-left: 8px;
+    flex: 1;
+  }
+  .modal-bar-badge {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Modal body */
+  .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text-muted);
+  }
+
+  /* ── Preview content styles ───────────────────────────── */
+  .pv-section { margin-bottom: 16px; }
+  .pv-section:last-child { margin-bottom: 0; }
+  .pv-h {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .pv-kv {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px dashed rgba(255,255,255,0.04);
+  }
+  .pv-k { color: var(--text-dim); }
+  .pv-v { color: var(--text); font-weight: 500; }
+  .pv-v--green { color: var(--green); }
+  .pv-v--amber { color: var(--amber); }
+  .pv-v--rose  { color: var(--rose); }
+  .pv-v--blue  { color: var(--blue); }
+  .pv-v--cyan  { color: var(--cyan); }
+  .pv-v--purple { color: var(--purple); }
+
+  /* Progress bar */
+  .pv-bar-wrap {
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 6px 0 2px;
+  }
+  .pv-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+  .pv-bar--green { background: var(--green); }
+  .pv-bar--blue  { background: var(--blue); }
+  .pv-bar--amber { background: var(--amber); }
+
+  /* Chart: ASCII burndown */
+  .pv-chart {
+    background: var(--bg-deep);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 6px;
+    padding: 12px;
+    white-space: pre;
+    font-size: 11px;
+    line-height: 1.5;
+    overflow-x: auto;
+  }
+
+  /* Table */
+  .pv-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+  .pv-table th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-dim);
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.5px;
+  }
+  .pv-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    color: var(--text-muted);
+  }
+
+  /* Tag inline */
+  .pv-tag {
+    display: inline-block;
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-right: 4px;
+    font-weight: 600;
+  }
+  .pv-tag--done { background: rgba(16,185,129,0.15); color: var(--green); }
+  .pv-tag--prog { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .pv-tag--todo { background: rgba(255,255,255,0.06); color: var(--text-dim); }
+  .pv-tag--block { background: rgba(244,63,94,0.15); color: var(--rose); }
+  .pv-tag--high { background: rgba(244,63,94,0.15); color: var(--rose); }
+  .pv-tag--med  { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .pv-tag--low  { background: rgba(16,185,129,0.15); color: var(--green); }
+
+  /* Checkbox list */
+  .pv-check { list-style: none; padding: 0; }
+  .pv-check li {
+    padding: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+  }
+  .pv-box {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pv-box--checked {
+    background: rgba(16,185,129,0.2);
+    border-color: var(--green);
+  }
+  .pv-box--checked::after {
+    content: '';
+    width: 6px; height: 3px;
+    border-left: 1.5px solid var(--green);
+    border-bottom: 1.5px solid var(--green);
+    transform: rotate(-45deg);
+    margin-bottom: 1px;
+  }
+
+  /* Slack message mockup */
+  .pv-slack {
+    background: var(--bg-deep);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .pv-slack-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .pv-slack-avatar {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, var(--blue), var(--cyan));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .pv-slack-name { font-weight: 600; color: var(--text); font-size: 12px; }
+  .pv-slack-time { color: var(--text-dim); font-size: 10px; margin-left: auto; }
+  .pv-slack-body { font-size: 12px; line-height: 1.6; color: var(--text-muted); }
+  .pv-slack-body strong { color: var(--text); font-weight: 600; }
+
+  /* Time block schedule */
+  .pv-sched-row {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .pv-sched-time {
+    width: 60px;
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--text-dim);
+    padding-top: 6px;
+    text-align: right;
+  }
+  .pv-sched-block {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    border-left: 3px solid;
+  }
+  .pv-sched-block--focus { background: rgba(59,130,246,0.08); border-color: var(--blue); color: var(--blue); }
+  .pv-sched-block--meet  { background: rgba(139,92,246,0.08); border-color: var(--purple); color: var(--purple); }
+  .pv-sched-block--review { background: rgba(245,158,11,0.08); border-color: var(--amber); color: var(--amber); }
+  .pv-sched-block--break { background: rgba(255,255,255,0.02); border-color: rgba(255,255,255,0.1); color: var(--text-dim); }
+  .pv-sched-block--deploy { background: rgba(16,185,129,0.08); border-color: var(--green); color: var(--green); }
+
+  /* Reminder row */
+  .pv-remind {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+  .pv-remind-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .pv-remind-dot--soon { background: var(--rose); box-shadow: 0 0 6px var(--rose); }
+  .pv-remind-dot--ok   { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+  .pv-remind-dot--far  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-tag">
+    <span class="pulse"></span>
+    AI-Powered Daily Operations
+  </div>
+  <h1>AI Agent <span class="hl">_</span> Daily<br>Workflow</h1>
+  <p>// Automated daily operations powered by Claude Code + MCP Protocol</p>
+</header>
+
+<div class="status-bar">
+  <span><span class="dot dot-g"></span>agent: active</span>
+  <span><span class="dot dot-b"></span>mcp: connected</span>
+  <span><span class="dot dot-a"></span>schedule: daily 08:30</span>
+</div>
+
+<div class="container">
+
+  <!-- AGENT HUB -->
+  <div class="agent-hub">
+    <span class="ptag">MCP Server</span>
+    <div class="hub-core">
+      <svg viewBox="0 0 24 24">
+        <path d="M12 2a4 4 0 0 1 4 4c0 1.5-.8 2.8-2 3.4V11h3a3 3 0 0 1 3 3v1.6c1.2.6 2 1.9 2 3.4a4 4 0 1 1-6-3.4V14a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v1.6A4 4 0 1 1 4 19c0-1.5.8-2.8 2-3.4V14a3 3 0 0 1 3-3h3V9.4A4 4 0 0 1 8 6a4 4 0 0 1 4-4z"/>
+      </svg>
+      <span>AI Agent</span>
+    </div>
+    <span class="ptag">Claude Code</span>
+  </div>
+
+  <!-- ARROWS FROM HUB -->
+  <div class="hub-arrows">
+    <div class="vl"></div>
+    <div class="vl"></div>
+    <div class="vl"></div>
+    <div class="arr"></div>
+    <div class="arr"></div>
+    <div class="arr"></div>
+  </div>
+
+  <!-- THREE FLOWS -->
+  <div class="flows">
+
+    <!-- FLOW 1: Jira -->
+    <div class="fc">
+      <div class="fc-head">
+        <div class="fc-ico">
+          <svg viewBox="0 0 24 24"><path d="M3 3h7l2 2h9v16H3z"/><path d="M7 13h10M7 17h6"/></svg>
+        </div>
+        <div>
+          <div class="fc-title">Jira Data Aggregation</div>
+          <div class="fc-sub">flow_01 // daily sync</div>
+        </div>
+      </div>
+      <div class="fc-body">
+        <div class="st">
+          <div class="st-m">01</div>
+          <div class="st-c">
+            <div class="st-l">Connect Jira via MCP</div>
+            <div class="st-d">Ket noi Jira Board thong qua MCP Server, authenticate & fetch project data</div>
+            <div class="tbs"><span class="tb tb-mcp">MCP:Jira</span><span class="tb tb-ai">OAuth 2.0</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">02</div>
+          <div class="st-c">
+            <div class="st-l">Fetch Sprint & Issues</div>
+            <div class="st-d">Lay du lieu sprint hien tai, tickets, assignees, story points & status</div>
+            <div class="tbs"><span class="tb tb-mcp">JQL Query</span><span class="tb">REST API</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">03</div>
+          <div class="st-c">
+            <div class="st-l">Analyze & Summarize</div>
+            <div class="st-d">AI phan tich progress, blockers, velocity trend & risk assessment</div>
+            <div class="tbs"><span class="tb tb-ai">Claude AI</span><span class="tb">Analytics</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">04</div>
+          <div class="st-c">
+            <div class="st-l">Generate Status Report</div>
+            <div class="st-d">Xuat daily report: sprint health, burndown, team workload</div>
+          </div>
+        </div>
+        <div class="fo">
+          <div class="fo-label">Output</div>
+          <div class="fo-item" data-preview="status-report">
+            <div class="fo-ico fo-ico--md">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
+            </div>
+            <div class="fo-txt">
+              <div class="fo-name">daily-status-report.md <span class="fo-type fo-type--md">.md</span></div>
+              <div class="fo-desc">Tong hop sprint health, team velocity, blockers</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+          <div class="fo-item" data-preview="burndown">
+            <div class="fo-ico fo-ico--chart">
+              <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+            </div>
+            <div class="fo-txt">
+              <div class="fo-name">sprint-burndown <span class="fo-type fo-type--chart">chart</span></div>
+              <div class="fo-desc">Bieu do burndown, story points con lai theo ngay</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+          <div class="fo-item" data-preview="blockers">
+            <div class="fo-ico fo-ico--json">
+              <svg viewBox="0 0 24 24"><path d="M4 7c0-1.1.9-2 2-2h2l2-2h4l2 2h2a2 2 0 0 1 2 2v1"/><path d="M7 13h10"/><path d="M10 16l-3 3M14 16l3 3"/></svg>
+            </div>
+            <div class="fo-txt">
+              <div class="fo-name">blocker-alerts.json <span class="fo-type fo-type--json">json</span></div>
+              <div class="fo-desc">Canh bao blockers, risk items can xu ly</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOW 2: Obsidian -->
+    <div class="fc">
+      <div class="fc-head">
+        <div class="fc-ico">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
+        </div>
+        <div>
+          <div class="fc-title">Obsidian Notes & Actions</div>
+          <div class="fc-sub">flow_02 // post-meeting</div>
+        </div>
+      </div>
+      <div class="fc-body">
+        <div class="st">
+          <div class="st-m">01</div>
+          <div class="st-c">
+            <div class="st-l">Capture Meeting Draft</div>
+            <div class="st-d">Nhan meeting notes tho / transcript tu buoi hop</div>
+            <div class="tbs"><span class="tb">Meeting Input</span><span class="tb tb-ai">Transcript</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">02</div>
+          <div class="st-c">
+            <div class="st-l">AI Structure & Extract</div>
+            <div class="st-d">Phan tich noi dung: key decisions, action items, owners & deadlines</div>
+            <div class="tbs"><span class="tb tb-ai">Claude AI</span><span class="tb">NLP Parse</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">03</div>
+          <div class="st-c">
+            <div class="st-l">Write to Obsidian</div>
+            <div class="st-d">Tao structured note trong Obsidian vault voi tags, links & metadata</div>
+            <div class="tbs"><span class="tb tb-obs">Obsidian API</span><span class="tb tb-obs">Markdown</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">04</div>
+          <div class="st-c">
+            <div class="st-l">Draft Next Actions</div>
+            <div class="st-d">Tu dong tao action items list, assign owners & set follow-up dates</div>
+          </div>
+        </div>
+        <div class="fo">
+          <div class="fo-label">Output</div>
+          <div class="fo-item" data-preview="meeting-notes">
+            <div class="fo-ico fo-ico--note">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
+            </div>
+            <div class="fo-txt">
+              <div class="fo-name">meeting-notes-YYMMDD.md <span class="fo-type fo-type--md">.md</span></div>
+              <div class="fo-desc">Structured note: decisions, attendees, tags</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+          <div class="fo-item" data-preview="action-items">
+            <div class="fo-ico fo-ico--task">
+              <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div class="fo-txt">
+              <div class="fo-name">action-items-tracker.md <span class="fo-type fo-type--api">tasks</span></div>
+              <div class="fo-desc">Danh sach viec can lam, owner, deadline</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+          <div class="fo-item" data-preview="reminders">
+            <div class="fo-ico fo-ico--bell">
+              <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            </div>
+            <div class="fo-txt">
+              <div class="fo-name">follow-up-reminders <span class="fo-type fo-type--auto">auto</span></div>
+              <div class="fo-desc">Tu dong nhac viec theo deadline da set</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOW 3: Daily Planning -->
+    <div class="fc">
+      <div class="fc-head">
+        <div class="fc-ico">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+        </div>
+        <div>
+          <div class="fc-title">Personal Daily Planning</div>
+          <div class="fc-sub">flow_03 // morning routine</div>
+        </div>
+      </div>
+      <div class="fc-body">
+        <div class="st">
+          <div class="st-m">01</div>
+          <div class="st-c">
+            <div class="st-l">Gather Context</div>
+            <div class="st-d">Thu thap: calendar events, pending tasks, Jira assignments, email flags</div>
+            <div class="tbs"><span class="tb tb-mcp">MCP:Calendar</span><span class="tb tb-mcp">MCP:Jira</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">02</div>
+          <div class="st-c">
+            <div class="st-l">Prioritize Tasks</div>
+            <div class="st-d">AI sap xep theo Eisenhower matrix: urgent/important, deadlines & dependencies</div>
+            <div class="tbs"><span class="tb tb-ai">Claude AI</span><span class="tb">Priority Engine</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">03</div>
+          <div class="st-c">
+            <div class="st-l">Generate Daily Plan</div>
+            <div class="st-d">Tao time-blocked schedule, estimated effort & focus blocks</div>
+            <div class="tbs"><span class="tb tb-out">Schedule</span><span class="tb">Time Block</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">04</div>
+          <div class="st-c">
+            <div class="st-l">Sync & Notify</div>
+            <div class="st-d">Dong bo plan sang Obsidian daily note & gui summary qua Slack</div>
+          </div>
+        </div>
+        <div class="fo">
+          <div class="fo-label">Output</div>
+          <div class="fo-item" data-preview="daily-plan">
+            <div class="fo-ico fo-ico--md">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>
+            </div>
+            <div class="fo-txt">
+              <div class="fo-name">daily-plan-YYMMDD.md <span class="fo-type fo-type--md">.md</span></div>
+              <div class="fo-desc">Plan ngay theo Eisenhower priority matrix</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+          <div class="fo-item" data-preview="schedule">
+            <div class="fo-ico fo-ico--cal">
+              <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            </div>
+            <div class="fo-txt">
+              <div class="fo-name">time-blocked-schedule <span class="fo-type fo-type--chart">sched</span></div>
+              <div class="fo-desc">Lich trinh theo khung gio, focus blocks</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+          <div class="fo-item" data-preview="slack-brief">
+            <div class="fo-ico fo-ico--slack">
+              <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="fo-txt">
+              <div class="fo-name">slack-morning-brief <span class="fo-type fo-type--slack">slack</span></div>
+              <div class="fo-desc">Gui tom tat buoi sang qua Slack channel</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CONVERGENCE -->
+  <div class="conv">
+    <div class="conv-lines">
+      <div class="vl2"></div>
+      <div class="vl2"></div>
+      <div class="vl2"></div>
+    </div>
+    <div class="conv-arrow"></div>
+    <div class="res">
+      <h3>// Unified Daily Intelligence</h3>
+      <div class="res-tags">
+        <span class="res-tag">Project Visibility</span>
+        <span class="res-tag">Knowledge Base</span>
+        <span class="res-tag">Personal Productivity</span>
+        <span class="res-tag">Team Alignment</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <span>AI Agent Workflow</span> &mdash; Powered by Claude Code + MCP Protocol &mdash; Stakeholder Demo
+</footer>
+
+</div>
+
+<!-- ── MODAL ──────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-bar">
+      <div class="modal-dot modal-dot--r" id="modalClose"></div>
+      <div class="modal-dot modal-dot--y"></div>
+      <div class="modal-dot modal-dot--g"></div>
+      <span class="modal-bar-title" id="modalTitle"></span>
+      <span class="modal-bar-badge" id="modalBadge"></span>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ── Preview content for each output ────────────────────── */
+const previews = {
+
+  'status-report': {
+    title: 'daily-status-report.md',
+    badge: '.md',
+    badgeClass: 'fo-type--md',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Sprint Overview</div>
+        <div class="pv-kv"><span class="pv-k">Sprint</span><span class="pv-v">Sprint 14 — "Phoenix"</span></div>
+        <div class="pv-kv"><span class="pv-k">Duration</span><span class="pv-v">01/04 — 12/04/2026</span></div>
+        <div class="pv-kv"><span class="pv-k">Day</span><span class="pv-v pv-v--blue">Day 8 / 10</span></div>
+        <div class="pv-kv"><span class="pv-k">Team</span><span class="pv-v">6 members</span></div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Progress</div>
+        <div class="pv-kv"><span class="pv-k">Total Story Points</span><span class="pv-v">42 SP</span></div>
+        <div class="pv-kv"><span class="pv-k">Completed</span><span class="pv-v pv-v--green">31 SP (74%)</span></div>
+        <div class="pv-bar-wrap"><div class="pv-bar pv-bar--green" style="width:74%"></div></div>
+        <div class="pv-kv"><span class="pv-k">In Progress</span><span class="pv-v pv-v--blue">8 SP</span></div>
+        <div class="pv-kv"><span class="pv-k">Remaining</span><span class="pv-v pv-v--amber">3 SP</span></div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Ticket Status</div>
+        <table class="pv-table">
+          <tr><th>Ticket</th><th>Assignee</th><th>SP</th><th>Status</th></tr>
+          <tr><td>PPM-142</td><td>Phong</td><td>5</td><td><span class="pv-tag pv-tag--done">Done</span></td></tr>
+          <tr><td>PPM-145</td><td>Minh</td><td>3</td><td><span class="pv-tag pv-tag--prog">In Progress</span></td></tr>
+          <tr><td>PPM-148</td><td>Huy</td><td>5</td><td><span class="pv-tag pv-tag--prog">In Progress</span></td></tr>
+          <tr><td>PPM-151</td><td>Linh</td><td>2</td><td><span class="pv-tag pv-tag--done">Done</span></td></tr>
+          <tr><td>PPM-153</td><td>Tuan</td><td>3</td><td><span class="pv-tag pv-tag--todo">To Do</span></td></tr>
+        </table>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Blockers</div>
+        <div class="pv-kv"><span class="pv-k pv-v--rose">PPM-148</span><span class="pv-v">Waiting for 3rd-party API docs</span></div>
+      </div>
+    `
+  },
+
+  'burndown': {
+    title: 'sprint-burndown-chart',
+    badge: 'chart',
+    badgeClass: 'fo-type--chart',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Sprint 14 Burndown — Story Points</div>
+        <div class="pv-chart"><span style="color:var(--text-dim)">SP</span>
+<span style="color:var(--amber)">42</span> |<span style="color:var(--text-dim)">&#9679;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;&#8230;</span>  ideal
+<span style="color:var(--amber)">38</span> |<span style="color:var(--green)">&#9632;</span>
+<span style="color:var(--amber)">34</span> |  <span style="color:var(--green)">&#9632;</span>
+<span style="color:var(--amber)">30</span> |    <span style="color:var(--green)">&#9632;</span>
+<span style="color:var(--amber)">26</span> |      <span style="color:var(--green)">&#9632;</span>
+<span style="color:var(--amber)">22</span> |        <span style="color:var(--green)">&#9632;</span>
+<span style="color:var(--amber)">18</span> |        <span style="color:var(--green)">&#9632;</span> <span style="color:var(--rose)">&larr; blocker day</span>
+<span style="color:var(--amber)">14</span> |          <span style="color:var(--green)">&#9632;</span>
+<span style="color:var(--amber)">11</span> |            <span style="color:var(--green)">&#9632;</span> <span style="color:var(--cyan)">&larr; today</span>
+   |____|____|____|____|____|____|____|____|____|____
+    D1   D2   D3   D4   D5   D6   D7   D8   D9  D10</div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Velocity</div>
+        <div class="pv-kv"><span class="pv-k">Avg velocity (last 3)</span><span class="pv-v">38.6 SP / sprint</span></div>
+        <div class="pv-kv"><span class="pv-k">Current pace</span><span class="pv-v pv-v--green">On Track (+2 SP ahead)</span></div>
+        <div class="pv-kv"><span class="pv-k">Predicted completion</span><span class="pv-v pv-v--green">Day 10 (on time)</span></div>
+      </div>
+    `
+  },
+
+  'blockers': {
+    title: 'blocker-alerts.json',
+    badge: 'json',
+    badgeClass: 'fo-type--json',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Active Blockers</div>
+        <div class="pv-chart">{
+  <span style="color:var(--blue)">"generated"</span>: <span style="color:var(--green)">"2026-04-08T08:30:00Z"</span>,
+  <span style="color:var(--blue)">"sprint"</span>: <span style="color:var(--green)">"Sprint 14"</span>,
+  <span style="color:var(--blue)">"blockers"</span>: [
+    {
+      <span style="color:var(--blue)">"ticket"</span>: <span style="color:var(--green)">"PPM-148"</span>,
+      <span style="color:var(--blue)">"severity"</span>: <span style="color:var(--rose)">"high"</span>,
+      <span style="color:var(--blue)">"title"</span>: <span style="color:var(--green)">"Payment API integration blocked"</span>,
+      <span style="color:var(--blue)">"reason"</span>: <span style="color:var(--green)">"Waiting for 3rd-party API docs"</span>,
+      <span style="color:var(--blue)">"blocked_days"</span>: <span style="color:var(--amber)">2</span>,
+      <span style="color:var(--blue)">"assignee"</span>: <span style="color:var(--green)">"Huy"</span>,
+      <span style="color:var(--blue)">"impact_sp"</span>: <span style="color:var(--amber)">5</span>
+    },
+    {
+      <span style="color:var(--blue)">"ticket"</span>: <span style="color:var(--green)">"PPM-155"</span>,
+      <span style="color:var(--blue)">"severity"</span>: <span style="color:var(--amber)">"medium"</span>,
+      <span style="color:var(--blue)">"title"</span>: <span style="color:var(--green)">"Design review pending"</span>,
+      <span style="color:var(--blue)">"reason"</span>: <span style="color:var(--green)">"UX team at full capacity"</span>,
+      <span style="color:var(--blue)">"blocked_days"</span>: <span style="color:var(--amber)">1</span>,
+      <span style="color:var(--blue)">"assignee"</span>: <span style="color:var(--green)">"Linh"</span>,
+      <span style="color:var(--blue)">"impact_sp"</span>: <span style="color:var(--amber)">2</span>
+    }
+  ],
+  <span style="color:var(--blue)">"total_blocked_sp"</span>: <span style="color:var(--rose)">7</span>,
+  <span style="color:var(--blue)">"risk_level"</span>: <span style="color:var(--amber)">"medium"</span>
+}</div>
+      </div>
+    `
+  },
+
+  'meeting-notes': {
+    title: 'meeting-notes-260408.md',
+    badge: '.md',
+    badgeClass: 'fo-type--md',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Meeting Info</div>
+        <div class="pv-kv"><span class="pv-k">Title</span><span class="pv-v">Sprint 14 Daily Standup</span></div>
+        <div class="pv-kv"><span class="pv-k">Date</span><span class="pv-v">2026-04-08 09:00</span></div>
+        <div class="pv-kv"><span class="pv-k">Duration</span><span class="pv-v">15 min</span></div>
+        <div class="pv-kv"><span class="pv-k">Attendees</span><span class="pv-v">Phong, Minh, Huy, Linh, Tuan</span></div>
+        <div class="pv-kv"><span class="pv-k">Tags</span><span class="pv-v"><span class="pv-tag pv-tag--prog">#standup</span><span class="pv-tag pv-tag--done">#sprint-14</span></span></div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Key Decisions</div>
+        <ul class="pv-check">
+          <li><div class="pv-box pv-box--checked"></div>Cho phep Huy switch sang mock API de unblock PPM-148</li>
+          <li><div class="pv-box pv-box--checked"></div>Di chuyen PPM-155 design review sang ngay mai</li>
+          <li><div class="pv-box pv-box--checked"></div>Tuan pick up PPM-153 ngay hom nay</li>
+        </ul>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Discussion Summary</div>
+        <div style="color:var(--text-muted);line-height:1.7">
+          <strong style="color:var(--text)">Phong:</strong> Demo cho stakeholder chieu nay, can finalize workflow diagram.<br>
+          <strong style="color:var(--text)">Huy:</strong> API docs tu partner chua co, de nghi dung mock data truoc.<br>
+          <strong style="color:var(--text)">Minh:</strong> Auth module 80% done, con phan refresh token.
+        </div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Obsidian Links</div>
+        <div class="pv-kv"><span class="pv-k">Backlink</span><span class="pv-v pv-v--purple">[[Sprint-14]] [[Daily-Standup]]</span></div>
+        <div class="pv-kv"><span class="pv-k">Related</span><span class="pv-v pv-v--purple">[[PPM-148]] [[PPM-155]]</span></div>
+      </div>
+    `
+  },
+
+  'action-items': {
+    title: 'action-items-tracker.md',
+    badge: 'tasks',
+    badgeClass: 'fo-type--api',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Action Items — 2026-04-08</div>
+        <table class="pv-table">
+          <tr><th>Action</th><th>Owner</th><th>Due</th><th>Priority</th></tr>
+          <tr>
+            <td>Setup mock API cho PPM-148</td>
+            <td style="color:var(--text)">Huy</td>
+            <td>08/04</td>
+            <td><span class="pv-tag pv-tag--high">High</span></td>
+          </tr>
+          <tr>
+            <td>Finalize refresh token logic</td>
+            <td style="color:var(--text)">Minh</td>
+            <td>09/04</td>
+            <td><span class="pv-tag pv-tag--high">High</span></td>
+          </tr>
+          <tr>
+            <td>Schedule design review voi UX team</td>
+            <td style="color:var(--text)">Linh</td>
+            <td>09/04</td>
+            <td><span class="pv-tag pv-tag--med">Med</span></td>
+          </tr>
+          <tr>
+            <td>Implement PPM-153 user settings</td>
+            <td style="color:var(--text)">Tuan</td>
+            <td>10/04</td>
+            <td><span class="pv-tag pv-tag--med">Med</span></td>
+          </tr>
+          <tr>
+            <td>Prepare stakeholder demo slides</td>
+            <td style="color:var(--text)">Phong</td>
+            <td>08/04</td>
+            <td><span class="pv-tag pv-tag--high">High</span></td>
+          </tr>
+        </table>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Completion Rate</div>
+        <div class="pv-kv"><span class="pv-k">Today's items</span><span class="pv-v">5 tasks</span></div>
+        <div class="pv-kv"><span class="pv-k">Completed</span><span class="pv-v pv-v--green">0 / 5</span></div>
+        <div class="pv-bar-wrap"><div class="pv-bar pv-bar--blue" style="width:0%"></div></div>
+      </div>
+    `
+  },
+
+  'reminders': {
+    title: 'follow-up-reminders',
+    badge: 'auto',
+    badgeClass: 'fo-type--auto',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Scheduled Reminders</div>
+        <div class="pv-remind">
+          <div class="pv-remind-dot pv-remind-dot--soon"></div>
+          <div style="flex:1">
+            <div style="color:var(--text);font-weight:600">Mock API cho PPM-148</div>
+            <div style="color:var(--text-dim);font-size:10px">Huy &mdash; Due: Hom nay 17:00</div>
+          </div>
+          <span class="pv-tag pv-tag--block">Urgent</span>
+        </div>
+        <div class="pv-remind">
+          <div class="pv-remind-dot pv-remind-dot--soon"></div>
+          <div style="flex:1">
+            <div style="color:var(--text);font-weight:600">Stakeholder demo prep</div>
+            <div style="color:var(--text-dim);font-size:10px">Phong &mdash; Due: Hom nay 14:00</div>
+          </div>
+          <span class="pv-tag pv-tag--block">Urgent</span>
+        </div>
+        <div class="pv-remind">
+          <div class="pv-remind-dot pv-remind-dot--ok"></div>
+          <div style="flex:1">
+            <div style="color:var(--text);font-weight:600">Refresh token logic</div>
+            <div style="color:var(--text-dim);font-size:10px">Minh &mdash; Due: 09/04 EOD</div>
+          </div>
+          <span class="pv-tag pv-tag--med">Tomorrow</span>
+        </div>
+        <div class="pv-remind">
+          <div class="pv-remind-dot pv-remind-dot--ok"></div>
+          <div style="flex:1">
+            <div style="color:var(--text);font-weight:600">Design review voi UX</div>
+            <div style="color:var(--text-dim);font-size:10px">Linh &mdash; Due: 09/04</div>
+          </div>
+          <span class="pv-tag pv-tag--med">Tomorrow</span>
+        </div>
+        <div class="pv-remind">
+          <div class="pv-remind-dot pv-remind-dot--far"></div>
+          <div style="flex:1">
+            <div style="color:var(--text);font-weight:600">User settings PPM-153</div>
+            <div style="color:var(--text-dim);font-size:10px">Tuan &mdash; Due: 10/04</div>
+          </div>
+          <span class="pv-tag pv-tag--low">2 days</span>
+        </div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Auto-notify via</div>
+        <div class="pv-kv"><span class="pv-k">Slack DM</span><span class="pv-v pv-v--green">Enabled</span></div>
+        <div class="pv-kv"><span class="pv-k">Obsidian Daily Note</span><span class="pv-v pv-v--green">Enabled</span></div>
+        <div class="pv-kv"><span class="pv-k">Remind before</span><span class="pv-v">2 hours</span></div>
+      </div>
+    `
+  },
+
+  'daily-plan': {
+    title: 'daily-plan-260408.md',
+    badge: '.md',
+    badgeClass: 'fo-type--md',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Daily Plan — 08/04/2026</div>
+        <div class="pv-kv"><span class="pv-k">Focus Theme</span><span class="pv-v pv-v--blue">Stakeholder Demo & Sprint Delivery</span></div>
+        <div class="pv-kv"><span class="pv-k">Energy Level</span><span class="pv-v">High (morning) / Medium (afternoon)</span></div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Eisenhower Matrix</div>
+        <table class="pv-table">
+          <tr><th></th><th>Urgent</th><th>Not Urgent</th></tr>
+          <tr>
+            <td style="font-weight:600;color:var(--text)">Important</td>
+            <td><span class="pv-tag pv-tag--high">DO</span> Prep demo slides<br><span class="pv-tag pv-tag--high">DO</span> Review Huy mock API</td>
+            <td><span class="pv-tag pv-tag--prog">SCHEDULE</span> Code review PPM-145<br><span class="pv-tag pv-tag--prog">SCHEDULE</span> Sprint retro prep</td>
+          </tr>
+          <tr>
+            <td style="font-weight:600;color:var(--text)">Not Important</td>
+            <td><span class="pv-tag pv-tag--med">DELEGATE</span> Docs update</td>
+            <td><span class="pv-tag pv-tag--todo">LATER</span> Refactor utils</td>
+          </tr>
+        </table>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Today's Tasks (Priority Order)</div>
+        <ul class="pv-check">
+          <li><div class="pv-box"></div><span style="color:var(--text)">Prepare stakeholder demo</span> <span class="pv-tag pv-tag--high">P0</span></li>
+          <li><div class="pv-box"></div><span style="color:var(--text)">Review Huy's mock API PR</span> <span class="pv-tag pv-tag--high">P0</span></li>
+          <li><div class="pv-box"></div><span style="color:var(--text)">Code review PPM-145</span> <span class="pv-tag pv-tag--med">P1</span></li>
+          <li><div class="pv-box"></div><span style="color:var(--text)">Sprint retro notes</span> <span class="pv-tag pv-tag--low">P2</span></li>
+        </ul>
+      </div>
+    `
+  },
+
+  'schedule': {
+    title: 'time-blocked-schedule',
+    badge: 'sched',
+    badgeClass: 'fo-type--chart',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Schedule — 08/04/2026</div>
+        <div class="pv-sched-row">
+          <div class="pv-sched-time">08:30</div>
+          <div class="pv-sched-block pv-sched-block--focus">AI Agent Daily Sync (auto)</div>
+        </div>
+        <div class="pv-sched-row">
+          <div class="pv-sched-time">09:00</div>
+          <div class="pv-sched-block pv-sched-block--meet">Daily Standup — 15 min</div>
+        </div>
+        <div class="pv-sched-row">
+          <div class="pv-sched-time">09:30</div>
+          <div class="pv-sched-block pv-sched-block--focus">Deep Work: Prep demo slides &mdash; 2h</div>
+        </div>
+        <div class="pv-sched-row">
+          <div class="pv-sched-time">11:30</div>
+          <div class="pv-sched-block pv-sched-block--review">Review Huy's mock API PR &mdash; 30m</div>
+        </div>
+        <div class="pv-sched-row">
+          <div class="pv-sched-time">12:00</div>
+          <div class="pv-sched-block pv-sched-block--break">Lunch Break &mdash; 1h</div>
+        </div>
+        <div class="pv-sched-row">
+          <div class="pv-sched-time">13:00</div>
+          <div class="pv-sched-block pv-sched-block--review">Code Review PPM-145 &mdash; 1h</div>
+        </div>
+        <div class="pv-sched-row">
+          <div class="pv-sched-time">14:00</div>
+          <div class="pv-sched-block pv-sched-block--deploy">Stakeholder Demo &mdash; 1h</div>
+        </div>
+        <div class="pv-sched-row">
+          <div class="pv-sched-time">15:00</div>
+          <div class="pv-sched-block pv-sched-block--focus">Deep Work: Sprint retro prep &mdash; 1.5h</div>
+        </div>
+        <div class="pv-sched-row">
+          <div class="pv-sched-time">16:30</div>
+          <div class="pv-sched-block pv-sched-block--break">Wrap-up & EOD sync &mdash; 30m</div>
+        </div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Time Allocation</div>
+        <div class="pv-kv"><span class="pv-k">Deep Work</span><span class="pv-v pv-v--blue">3.5h (44%)</span></div>
+        <div class="pv-bar-wrap"><div class="pv-bar pv-bar--blue" style="width:44%"></div></div>
+        <div class="pv-kv"><span class="pv-k">Reviews</span><span class="pv-v pv-v--amber">1.5h (19%)</span></div>
+        <div class="pv-bar-wrap"><div class="pv-bar pv-bar--amber" style="width:19%"></div></div>
+        <div class="pv-kv"><span class="pv-k">Meetings</span><span class="pv-v pv-v--purple">1.25h (16%)</span></div>
+        <div class="pv-kv"><span class="pv-k">Breaks</span><span class="pv-v">1.5h (19%)</span></div>
+      </div>
+    `
+  },
+
+  'slack-brief': {
+    title: 'slack-morning-brief',
+    badge: 'slack',
+    badgeClass: 'fo-type--slack',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Slack Message Preview</div>
+        <div class="pv-slack">
+          <div class="pv-slack-head">
+            <div class="pv-slack-avatar">AI</div>
+            <div>
+              <div class="pv-slack-name">AI Agent Bot</div>
+              <div style="font-size:10px;color:var(--text-dim)">#team-engineering</div>
+            </div>
+            <div class="pv-slack-time">08:31 AM</div>
+          </div>
+          <div class="pv-slack-body">
+            <strong>Morning Brief — 08/04/2026</strong><br><br>
+            <strong>Sprint 14 Status:</strong> Day 8/10 &mdash; 74% done (31/42 SP)<br>
+            <strong>On Track:</strong> +2 SP ahead of ideal burndown<br><br>
+            <strong>Blockers (1):</strong><br>
+            &bull; <span style="color:var(--rose)">PPM-148</span> Payment API &mdash; waiting for partner docs (2 days)<br><br>
+            <strong>Today's Focus:</strong><br>
+            &bull; Stakeholder demo @ 14:00<br>
+            &bull; Huy: setup mock API (unblock PPM-148)<br>
+            &bull; Minh: finalize refresh token<br><br>
+            <strong>Action Items:</strong> 5 tasks assigned<br>
+            <strong>Next Reminder:</strong> Demo prep @ 12:00
+          </div>
+        </div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Delivery Status</div>
+        <div class="pv-kv"><span class="pv-k">Channel</span><span class="pv-v">#team-engineering</span></div>
+        <div class="pv-kv"><span class="pv-k">Sent at</span><span class="pv-v pv-v--green">08:31 AM</span></div>
+        <div class="pv-kv"><span class="pv-k">Status</span><span class="pv-v pv-v--green">Delivered</span></div>
+      </div>
+    `
+  }
+
+};
+
+/* ── Modal logic ────────────────────────────────────────── */
+const overlay = document.getElementById('modalOverlay');
+const modalTitle = document.getElementById('modalTitle');
+const modalBadge = document.getElementById('modalBadge');
+const modalBody = document.getElementById('modalBody');
+const modalClose = document.getElementById('modalClose');
+
+function openModal(key) {
+  const p = previews[key];
+  if (!p) return;
+  modalTitle.textContent = p.title;
+  modalBadge.textContent = p.badge;
+  modalBadge.className = 'modal-bar-badge ' + p.badgeClass;
+  modalBody.innerHTML = p.html;
+  overlay.classList.add('active');
+}
+
+function closeModal() {
+  overlay.classList.remove('active');
+}
+
+/* Click handlers on output items */
+document.querySelectorAll('.fo-item[data-preview]').forEach(function(el) {
+  el.addEventListener('click', function() {
+    openModal(this.dataset.preview);
+  });
+});
+
+/* Close on overlay click, red dot click, Escape */
+overlay.addEventListener('click', function(e) {
+  if (e.target === overlay) closeModal();
+});
+modalClose.addEventListener('click', closeModal);
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
+});
+</script>
+
+</body>
+</html>
