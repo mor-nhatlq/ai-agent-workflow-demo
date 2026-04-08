@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent Sales Workflow — OpenClaw</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-deep:    #0A0E1A;
+    --bg-card:    #111827;
+    --bg-surface: #1E293B;
+    --border:     #1E293B;
+    --border-glow:#3B82F6;
+    --text:       #E2E8F0;
+    --text-muted: #94A3B8;
+    --text-dim:   #64748B;
+    --blue:       #3B82F6;
+    --cyan:       #06B6D4;
+    --green:      #10B981;
+    --amber:      #F59E0B;
+    --purple:     #8B5CF6;
+    --rose:       #F43F5E;
+    --orange:     #F97316;
+    --font-mono:  'Fira Code', monospace;
+    --font-sans:  'Fira Sans', sans-serif;
+  }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(59,130,246,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.02) 2px, rgba(0,0,0,0.02) 4px);
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  .wrapper { position: relative; z-index: 1; }
+
+  /* ── HEADER ───────────────────────────────────────────── */
+  .header {
+    text-align: center;
+    padding: 52px 24px 20px;
+  }
+  .header-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--orange);
+    background: rgba(249,115,22,0.08);
+    border: 1px solid rgba(249,115,22,0.2);
+    border-radius: 20px;
+    padding: 6px 16px;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .header-tag .pulse {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: blink 2s ease-in-out infinite;
+  }
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .header h1 {
+    font-family: var(--font-mono);
+    font-size: clamp(26px, 4vw, 42px);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
+  }
+  .header h1 .hl {
+    color: var(--orange);
+    text-shadow: 0 0 30px rgba(249,115,22,0.25);
+  }
+  .header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 10px;
+    font-family: var(--font-mono);
+  }
+
+  /* ── STATUS BAR ───────────────────────────────────────── */
+  .status-bar {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    padding: 14px 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    border-top: 1px solid rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    margin-bottom: 44px;
+    flex-wrap: wrap;
+  }
+  .status-bar .dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+  .dot-g { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot-b { background: var(--blue);  box-shadow: 0 0 6px var(--blue);  }
+  .dot-o { background: var(--orange); box-shadow: 0 0 6px var(--orange); }
+
+  /* ── CONTAINER ────────────────────────────────────────── */
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+  }
+
+  /* ── AGENT HUB ────────────────────────────────────────── */
+  .agent-hub {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 44px;
+    flex-wrap: wrap;
+  }
+  .hub-core {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #3D1F00, var(--bg-deep));
+    border: 2px solid var(--orange);
+    box-shadow: 0 0 40px rgba(249,115,22,0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: glow 3s ease-in-out infinite;
+  }
+  @keyframes glow {
+    0%,100% { box-shadow: 0 0 30px rgba(249,115,22,0.15); }
+    50% { box-shadow: 0 0 50px rgba(249,115,22,0.3); }
+  }
+  .hub-core svg { width: 32px; height: 32px; stroke: var(--orange); fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .hub-core span {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--orange);
+    margin-top: 5px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .ptag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--bg-surface);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 4px;
+    padding: 5px 12px;
+  }
+
+  /* ── ARROW from hub to flows ──────────────────────────── */
+  .hub-arrows {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+    position: relative;
+    height: 40px;
+  }
+  .hub-arrows::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    width: 1px; height: 20px;
+    background: var(--text-dim);
+  }
+  .hub-arrows::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: calc(16.66% + 12px);
+    right: calc(16.66% + 12px);
+    height: 1px;
+    background: var(--text-dim);
+  }
+  .hub-arrows .vl {
+    position: absolute;
+    top: 20px;
+    width: 1px; height: 20px;
+    background: var(--text-dim);
+  }
+  .hub-arrows .vl:nth-child(1) { left: calc(16.66% + 12px); }
+  .hub-arrows .vl:nth-child(2) { left: 50%; }
+  .hub-arrows .vl:nth-child(3) { right: calc(16.66% + 12px); }
+  .hub-arrows .arr {
+    position: absolute;
+    bottom: -1px;
+    width: 0; height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--text-dim);
+  }
+  .hub-arrows .arr:nth-child(4) { left: calc(16.66% + 7px); }
+  .hub-arrows .arr:nth-child(5) { left: calc(50% - 5px); }
+  .hub-arrows .arr:nth-child(6) { right: calc(16.66% + 7px); }
+
+  /* ── FLOW CARDS GRID ──────────────────────────────────── */
+  .flows {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 900px) { .flows { grid-template-columns: 1fr; } }
+
+  /* ── FLOW CARD ────────────────────────────────────────── */
+  .fc {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .fc:hover {
+    border-color: rgba(249,115,22,0.3);
+    box-shadow: 0 4px 24px rgba(249,115,22,0.06);
+  }
+
+  .fc-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    position: relative;
+  }
+  .fc-head::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .fc:nth-child(1) .fc-head::before { background: linear-gradient(90deg, var(--cyan), var(--blue)); }
+  .fc:nth-child(2) .fc-head::before { background: linear-gradient(90deg, var(--orange), var(--amber)); }
+  .fc:nth-child(3) .fc-head::before { background: linear-gradient(90deg, var(--purple), var(--rose)); }
+
+  .fc-ico {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .fc-ico svg { width: 20px; height: 20px; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .fc:nth-child(1) .fc-ico { background: rgba(6,182,212,0.12); }
+  .fc:nth-child(1) .fc-ico svg { stroke: var(--cyan); }
+  .fc:nth-child(2) .fc-ico { background: rgba(249,115,22,0.12); }
+  .fc:nth-child(2) .fc-ico svg { stroke: var(--orange); }
+  .fc:nth-child(3) .fc-ico { background: rgba(139,92,246,0.12); }
+  .fc:nth-child(3) .fc-ico svg { stroke: var(--purple); }
+
+  .fc-title { font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+  .fc-sub { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
+  .fc-body { padding: 20px; }
+
+  /* ── STEP NODE ────────────────────────────────────────── */
+  .st {
+    display: flex;
+    gap: 12px;
+    position: relative;
+    padding-bottom: 18px;
+  }
+  .st:last-child { padding-bottom: 0; }
+  .st:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 14px; top: 32px; bottom: 0;
+    width: 1px;
+    background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.08) 0px, rgba(255,255,255,0.08) 3px, transparent 3px, transparent 7px);
+  }
+  .st-m {
+    width: 29px; height: 29px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .fc:nth-child(1) .st-m { background: rgba(6,182,212,0.12); color: var(--cyan); border: 1px solid rgba(6,182,212,0.25); }
+  .fc:nth-child(2) .st-m { background: rgba(249,115,22,0.12); color: var(--orange); border: 1px solid rgba(249,115,22,0.25); }
+  .fc:nth-child(3) .st-m { background: rgba(139,92,246,0.12); color: var(--purple); border: 1px solid rgba(139,92,246,0.25); }
+
+  .st-c { flex: 1; min-width: 0; }
+  .st-l { font-family: var(--font-mono); font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+  .st-d { font-size: 12px; color: var(--text-muted); line-height: 1.55; }
+
+  /* Tool badges */
+  .tbs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+  .tb {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .tb-oc  { border-color: rgba(249,115,22,0.25); color: var(--orange); }
+  .tb-ai  { border-color: rgba(6,182,212,0.25);  color: var(--cyan); }
+  .tb-api { border-color: rgba(59,130,246,0.25); color: var(--blue); }
+  .tb-cv  { border-color: rgba(139,92,246,0.25); color: var(--purple); }
+
+  /* ── OUTPUT VISUAL CARDS ──────────────────────────────── */
+  .fo {
+    margin-top: 16px;
+    padding: 14px;
+    background: var(--bg-deep);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .fo-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .fo-label::before {
+    content: '';
+    display: inline-block;
+    width: 16px; height: 1px;
+    background: rgba(255,255,255,0.1);
+  }
+  .fo-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,0.05);
+  }
+  .fo-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.04);
+    border-radius: 6px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .fo-item[data-preview] { cursor: pointer; }
+  .fo-item[data-preview]:hover { border-color: rgba(249,115,22,0.3); background: rgba(255,255,255,0.04); }
+  .fo-ico {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .fo-ico svg { width: 15px; height: 15px; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .fo-ico--inbox { background: rgba(6,182,212,0.12); }
+  .fo-ico--inbox svg { stroke: var(--cyan); }
+  .fo-ico--reply { background: rgba(16,185,129,0.12); }
+  .fo-ico--reply svg { stroke: var(--green); }
+  .fo-ico--log { background: rgba(59,130,246,0.12); }
+  .fo-ico--log svg { stroke: var(--blue); }
+  .fo-ico--broadcast { background: rgba(249,115,22,0.12); }
+  .fo-ico--broadcast svg { stroke: var(--orange); }
+  .fo-ico--report { background: rgba(245,158,11,0.12); }
+  .fo-ico--report svg { stroke: var(--amber); }
+  .fo-ico--sched { background: rgba(16,185,129,0.12); }
+  .fo-ico--sched svg { stroke: var(--green); }
+  .fo-ico--match { background: rgba(139,92,246,0.12); }
+  .fo-ico--match svg { stroke: var(--purple); }
+  .fo-ico--rank { background: rgba(244,63,94,0.12); }
+  .fo-ico--rank svg { stroke: var(--rose); }
+  .fo-ico--shortlist { background: rgba(16,185,129,0.12); }
+  .fo-ico--shortlist svg { stroke: var(--green); }
+  .fo-txt { flex: 1; min-width: 0; }
+  .fo-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .fo-desc { font-size: 10px; color: var(--text-dim); margin-top: 2px; line-height: 1.4; }
+  .fo-type {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+  .fo-type--inbox { background: rgba(6,182,212,0.15); color: var(--cyan); }
+  .fo-type--json  { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .fo-type--auto  { background: rgba(16,185,129,0.15); color: var(--green); }
+  .fo-type--report{ background: rgba(245,158,11,0.15); color: var(--amber); }
+  .fo-type--sched { background: rgba(249,115,22,0.15); color: var(--orange); }
+  .fo-type--ai    { background: rgba(139,92,246,0.15); color: var(--purple); }
+  .fo-type--rank  { background: rgba(244,63,94,0.15);  color: var(--rose); }
+  .fo-type--md    { background: rgba(16,185,129,0.15); color: var(--green); }
+  .fo-status {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--green);
+    box-shadow: 0 0 6px rgba(16,185,129,0.5);
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  /* ── CONVERGENCE ──────────────────────────────────────── */
+  .conv {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 44px;
+    gap: 14px;
+  }
+  .conv-lines {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    max-width: 960px;
+    height: 36px;
+    position: relative;
+  }
+  .conv-lines::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 16.66%; right: 16.66%;
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+  }
+  .conv-lines .vl2 {
+    position: absolute;
+    bottom: 0;
+    width: 1px; height: 36px;
+    background: rgba(255,255,255,0.08);
+  }
+  .conv-lines .vl2:nth-child(1) { left: 16.66%; }
+  .conv-lines .vl2:nth-child(2) { left: 50%; }
+  .conv-lines .vl2:nth-child(3) { right: 16.66%; }
+  .conv-arrow {
+    width: 1px; height: 20px;
+    background: rgba(255,255,255,0.08);
+    position: relative;
+  }
+  .conv-arrow::after {
+    content: '';
+    position: absolute;
+    bottom: -5px; left: -4px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--text-dim);
+  }
+  .res {
+    background: var(--bg-card);
+    border: 1px solid rgba(249,115,22,0.3);
+    border-radius: 12px;
+    padding: 24px 36px;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(249,115,22,0.06);
+    max-width: 640px;
+  }
+  .res h3 {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--orange);
+    margin-bottom: 12px;
+  }
+  .res-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .res-tag {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: rgba(249,115,22,0.08);
+    border: 1px solid rgba(249,115,22,0.2);
+    color: var(--orange);
+  }
+
+  /* ── FOOTER ───────────────────────────────────────────── */
+  .footer {
+    text-align: center;
+    padding: 36px 24px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    border-top: 1px solid rgba(255,255,255,0.04);
+    margin-top: 48px;
+  }
+  .footer span { color: var(--orange); }
+
+  /* ── ANIMATIONS ───────────────────────────────────────── */
+  @keyframes up { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
+  .fc:nth-child(1) { animation: up .5s .1s both; }
+  .fc:nth-child(2) { animation: up .5s .25s both; }
+  .fc:nth-child(3) { animation: up .5s .4s both; }
+  .conv { animation: up .5s .55s both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01s !important; }
+  }
+
+  /* ── MODAL ────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(6px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+  .modal-overlay.active { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid rgba(249,115,22,0.25);
+    border-radius: 12px;
+    width: 100%; max-width: 640px; max-height: 85vh;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 0 60px rgba(249,115,22,0.1);
+    transform: translateY(16px) scale(0.97);
+    transition: transform 0.25s;
+  }
+  .modal-overlay.active .modal { transform: translateY(0) scale(1); }
+  .modal-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .modal-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .modal-dot--r { background: #FF5F57; cursor: pointer; }
+  .modal-dot--r:hover { background: #FF3B30; }
+  .modal-dot--y { background: #FEBC2E; }
+  .modal-dot--g { background: #28C840; }
+  .modal-bar-title { font-family: var(--font-mono); font-size: 12px; color: var(--text-dim); margin-left: 8px; flex: 1; }
+  .modal-bar-badge { font-family: var(--font-mono); font-size: 9px; padding: 2px 7px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .modal-body {
+    padding: 20px; overflow-y: auto; flex: 1;
+    font-family: var(--font-mono); font-size: 12px; line-height: 1.7; color: var(--text-muted);
+  }
+
+  /* ── Preview styles ───────────────────────────────────── */
+  .pv-section { margin-bottom: 16px; }
+  .pv-section:last-child { margin-bottom: 0; }
+  .pv-h { font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .pv-kv { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed rgba(255,255,255,0.04); }
+  .pv-k { color: var(--text-dim); }
+  .pv-v { color: var(--text); font-weight: 500; }
+  .pv-v--green { color: var(--green); }
+  .pv-v--amber { color: var(--amber); }
+  .pv-v--rose  { color: var(--rose); }
+  .pv-v--blue  { color: var(--blue); }
+  .pv-v--cyan  { color: var(--cyan); }
+  .pv-v--purple { color: var(--purple); }
+  .pv-v--orange { color: var(--orange); }
+  .pv-bar-wrap { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; margin: 6px 0 2px; }
+  .pv-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .pv-bar--green { background: var(--green); }
+  .pv-bar--blue  { background: var(--blue); }
+  .pv-bar--amber { background: var(--amber); }
+  .pv-bar--orange { background: var(--orange); }
+  .pv-bar--purple { background: var(--purple); }
+  .pv-chart { background: var(--bg-deep); border: 1px solid rgba(255,255,255,0.04); border-radius: 6px; padding: 12px; white-space: pre; font-size: 11px; line-height: 1.5; overflow-x: auto; }
+  .pv-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .pv-table th { text-align: left; font-weight: 600; color: var(--text-dim); padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.08); text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+  .pv-table td { padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.03); color: var(--text-muted); }
+  .pv-tag { display: inline-block; font-size: 9px; padding: 1px 6px; border-radius: 3px; margin-right: 4px; font-weight: 600; }
+  .pv-tag--done { background: rgba(16,185,129,0.15); color: var(--green); }
+  .pv-tag--sent { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .pv-tag--fail { background: rgba(244,63,94,0.15); color: var(--rose); }
+  .pv-tag--pend { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .pv-tag--high { background: rgba(16,185,129,0.15); color: var(--green); }
+  .pv-tag--med  { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .pv-tag--low  { background: rgba(244,63,94,0.15); color: var(--rose); }
+  .pv-tag--match { background: rgba(139,92,246,0.15); color: var(--purple); }
+
+  /* Chat message mockup */
+  .pv-chat { background: var(--bg-deep); border: 1px solid rgba(255,255,255,0.04); border-radius: 8px; padding: 12px; margin-bottom: 8px; }
+  .pv-chat-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .pv-chat-avatar { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .pv-chat-name { font-weight: 600; color: var(--text); font-size: 11px; }
+  .pv-chat-platform { font-size: 9px; color: var(--text-dim); margin-left: auto; padding: 1px 6px; border-radius: 3px; background: rgba(255,255,255,0.04); }
+  .pv-chat-body { font-size: 11px; color: var(--text-muted); line-height: 1.6; }
+  .pv-chat-time { font-size: 9px; color: var(--text-dim); margin-top: 4px; text-align: right; }
+
+  /* CV match bar */
+  .pv-match-bar { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .pv-match-label { width: 100px; font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+  .pv-match-track { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+  .pv-match-fill { height: 100%; border-radius: 4px; transition: width 0.6s; }
+  .pv-match-val { font-size: 11px; font-weight: 600; width: 40px; text-align: right; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+
+<header class="header">
+  <div class="header-tag">
+    <span class="pulse"></span>
+    AI-Powered Sales Operations
+  </div>
+  <h1>AI Agent <span class="hl">+</span> OpenClaw<br>Sales Workflow</h1>
+  <p>// Omnichannel messaging, broadcast & CV screening powered by AI + OpenClaw</p>
+</header>
+
+<div class="status-bar">
+  <span><span class="dot dot-g"></span>agent: active</span>
+  <span><span class="dot dot-o"></span>openclaw: connected</span>
+  <span><span class="dot dot-b"></span>channels: 5 linked</span>
+</div>
+
+<div class="container">
+
+  <!-- AGENT HUB -->
+  <div class="agent-hub">
+    <span class="ptag">OpenClaw API</span>
+    <div class="hub-core">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/>
+      </svg>
+      <span>AI + OpenClaw</span>
+    </div>
+    <span class="ptag">Claude AI</span>
+  </div>
+
+  <div class="hub-arrows">
+    <div class="vl"></div><div class="vl"></div><div class="vl"></div>
+    <div class="arr"></div><div class="arr"></div><div class="arr"></div>
+  </div>
+
+  <!-- THREE FLOWS -->
+  <div class="flows">
+
+    <!-- FLOW 1: Omnichannel Inbox -->
+    <div class="fc">
+      <div class="fc-head">
+        <div class="fc-ico">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div>
+          <div class="fc-title">Omnichannel Inbox</div>
+          <div class="fc-sub">flow_01 // realtime sync</div>
+        </div>
+      </div>
+      <div class="fc-body">
+        <div class="st">
+          <div class="st-m">01</div>
+          <div class="st-c">
+            <div class="st-l">Connect All Channels</div>
+            <div class="st-d">Ket noi Zalo, Telegram, WhatsApp, Viber, Messenger qua OpenClaw API</div>
+            <div class="tbs"><span class="tb tb-oc">OpenClaw</span><span class="tb tb-api">Webhook</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">02</div>
+          <div class="st-c">
+            <div class="st-l">Aggregate Messages</div>
+            <div class="st-d">Gom tat ca tin nhan tu moi kenh ve 1 unified inbox, tag theo platform</div>
+            <div class="tbs"><span class="tb tb-oc">Unified API</span><span class="tb">Queue</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">03</div>
+          <div class="st-c">
+            <div class="st-l">AI Classify & Suggest</div>
+            <div class="st-d">AI phan loai intent (hoi gia, tuyen dung, ho tro) & goi y reply</div>
+            <div class="tbs"><span class="tb tb-ai">Claude AI</span><span class="tb">NLP</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">04</div>
+          <div class="st-c">
+            <div class="st-l">Auto-Reply / Escalate</div>
+            <div class="st-d">Tu dong tra loi FAQ hoac chuyen cho sales rep xu ly</div>
+          </div>
+        </div>
+        <div class="fo">
+          <div class="fo-label">Output</div>
+          <div class="fo-item" data-preview="unified-inbox">
+            <div class="fo-ico fo-ico--inbox"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3H10l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
+            <div class="fo-txt">
+              <div class="fo-name">unified-inbox <span class="fo-type fo-type--inbox">live</span></div>
+              <div class="fo-desc">Tat ca tin nhan tu 5 kenh trong 1 man hinh</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+          <div class="fo-item" data-preview="auto-replies">
+            <div class="fo-ico fo-ico--reply"><svg viewBox="0 0 24 24"><path d="M9 17H4l3-3-3-3h5"/><path d="M13 7h6a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"/></svg></div>
+            <div class="fo-txt">
+              <div class="fo-name">auto-reply-log <span class="fo-type fo-type--auto">auto</span></div>
+              <div class="fo-desc">Log cac reply tu dong & escalation cases</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+          <div class="fo-item" data-preview="conversation-log">
+            <div class="fo-ico fo-ico--log"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6M9 11h6"/></svg></div>
+            <div class="fo-txt">
+              <div class="fo-name">conversation-analytics <span class="fo-type fo-type--json">json</span></div>
+              <div class="fo-desc">Thong ke so luong, response time, intent</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOW 2: Broadcast -->
+    <div class="fc">
+      <div class="fc-head">
+        <div class="fc-ico">
+          <svg viewBox="0 0 24 24"><path d="M19.07 4.93A10 10 0 0 0 2 12c0 2.03.6 3.91 1.63 5.49L2 22l4.51-1.63A10 10 0 0 0 22 12c0-2.76-1.12-5.26-2.93-7.07z"/></svg>
+        </div>
+        <div>
+          <div class="fc-title">Group Broadcast</div>
+          <div class="fc-sub">flow_02 // mass messaging</div>
+        </div>
+      </div>
+      <div class="fc-body">
+        <div class="st">
+          <div class="st-m">01</div>
+          <div class="st-c">
+            <div class="st-l">Compose Message</div>
+            <div class="st-d">Soan tin nhan / content chuan bi gui, AI review & optimize</div>
+            <div class="tbs"><span class="tb tb-ai">Claude AI</span><span class="tb">Template</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">02</div>
+          <div class="st-c">
+            <div class="st-l">Select Target Groups</div>
+            <div class="st-d">Chon cac group/channel tren Zalo, Tele, WhatsApp, Viber can gui</div>
+            <div class="tbs"><span class="tb tb-oc">OpenClaw</span><span class="tb">Group API</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">03</div>
+          <div class="st-c">
+            <div class="st-l">Broadcast via OpenClaw</div>
+            <div class="st-d">Gui dong loat 1 noi dung toi tat ca groups, tu dong adapt format theo platform</div>
+            <div class="tbs"><span class="tb tb-oc">Broadcast API</span><span class="tb tb-api">Rate Limit</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">04</div>
+          <div class="st-c">
+            <div class="st-l">Track & Report</div>
+            <div class="st-d">Theo doi delivery status, read receipts, engagement metrics</div>
+          </div>
+        </div>
+        <div class="fo">
+          <div class="fo-label">Output</div>
+          <div class="fo-item" data-preview="broadcast-report">
+            <div class="fo-ico fo-ico--broadcast"><svg viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg></div>
+            <div class="fo-txt">
+              <div class="fo-name">broadcast-report <span class="fo-type fo-type--report">report</span></div>
+              <div class="fo-desc">Delivery status toan bo groups da gui</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+          <div class="fo-item" data-preview="engagement-stats">
+            <div class="fo-ico fo-ico--report"><svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg></div>
+            <div class="fo-txt">
+              <div class="fo-name">engagement-analytics <span class="fo-type fo-type--json">json</span></div>
+              <div class="fo-desc">Read rate, reply rate, click-through per platform</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+          <div class="fo-item" data-preview="schedule-log">
+            <div class="fo-ico fo-ico--sched"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+            <div class="fo-txt">
+              <div class="fo-name">schedule-queue <span class="fo-type fo-type--sched">queue</span></div>
+              <div class="fo-desc">Hang doi tin da len lich & trang thai</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOW 3: CV Screening -->
+    <div class="fc">
+      <div class="fc-head">
+        <div class="fc-ico">
+          <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <div class="fc-title">CV Screening & Matching</div>
+          <div class="fc-sub">flow_03 // recruitment AI</div>
+        </div>
+      </div>
+      <div class="fc-body">
+        <div class="st">
+          <div class="st-m">01</div>
+          <div class="st-c">
+            <div class="st-l">Receive CV Files</div>
+            <div class="st-d">Nhan CV tu email, chat, form qua cac kenh — PDF, DOCX, images</div>
+            <div class="tbs"><span class="tb tb-oc">OpenClaw</span><span class="tb">File Parser</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">02</div>
+          <div class="st-c">
+            <div class="st-l">AI Extract & Parse</div>
+            <div class="st-d">AI doc CV, extract: skills, experience, education, certifications</div>
+            <div class="tbs"><span class="tb tb-ai">Claude AI</span><span class="tb tb-cv">OCR/NLP</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">03</div>
+          <div class="st-c">
+            <div class="st-l">Match vs Job Requirements</div>
+            <div class="st-d">So sanh CV data voi JD input: skills match, exp level, salary range</div>
+            <div class="tbs"><span class="tb tb-ai">Matching Engine</span><span class="tb">Scoring</span></div>
+          </div>
+        </div>
+        <div class="st">
+          <div class="st-m">04</div>
+          <div class="st-c">
+            <div class="st-l">Rank & Shortlist</div>
+            <div class="st-d">Xep hang ung vien theo match score, xuat shortlist & recommendation</div>
+          </div>
+        </div>
+        <div class="fo">
+          <div class="fo-label">Output</div>
+          <div class="fo-item" data-preview="match-report">
+            <div class="fo-ico fo-ico--match"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+            <div class="fo-txt">
+              <div class="fo-name">cv-match-report <span class="fo-type fo-type--ai">AI</span></div>
+              <div class="fo-desc">Chi tiet matching tung ung vien vs JD</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+          <div class="fo-item" data-preview="candidate-ranking">
+            <div class="fo-ico fo-ico--rank"><svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.56 5.82 22 7 14.14l-5-4.87 6.91-1.01z"/></svg></div>
+            <div class="fo-txt">
+              <div class="fo-name">candidate-ranking <span class="fo-type fo-type--rank">rank</span></div>
+              <div class="fo-desc">Bang xep hang ung vien theo diem matching</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+          <div class="fo-item" data-preview="shortlist">
+            <div class="fo-ico fo-ico--shortlist"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg></div>
+            <div class="fo-txt">
+              <div class="fo-name">shortlist.md <span class="fo-type fo-type--md">.md</span></div>
+              <div class="fo-desc">Danh sach rut gon ung vien dat tieu chuan</div>
+            </div>
+            <div class="fo-status"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CONVERGENCE -->
+  <div class="conv">
+    <div class="conv-lines">
+      <div class="vl2"></div><div class="vl2"></div><div class="vl2"></div>
+    </div>
+    <div class="conv-arrow"></div>
+    <div class="res">
+      <h3>// Unified Sales Intelligence</h3>
+      <div class="res-tags">
+        <span class="res-tag">Omnichannel Comms</span>
+        <span class="res-tag">Mass Outreach</span>
+        <span class="res-tag">Smart Recruitment</span>
+        <span class="res-tag">Sales Productivity</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <span>AI Agent + OpenClaw</span> &mdash; Sales Workflow Automation &mdash; Stakeholder Demo
+</footer>
+
+</div>
+
+<!-- ── MODAL ──────────────────────────────────────────────── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-bar">
+      <div class="modal-dot modal-dot--r" id="modalClose"></div>
+      <div class="modal-dot modal-dot--y"></div>
+      <div class="modal-dot modal-dot--g"></div>
+      <span class="modal-bar-title" id="modalTitle"></span>
+      <span class="modal-bar-badge" id="modalBadge"></span>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+const previews = {
+
+  'unified-inbox': {
+    title: 'unified-inbox — Live Messages',
+    badge: 'live',
+    badgeClass: 'fo-type--inbox',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Incoming Messages — All Channels</div>
+        <div class="pv-chat">
+          <div class="pv-chat-head">
+            <div class="pv-chat-avatar" style="background:linear-gradient(135deg,#0068FF,#00A1FF)">Z</div>
+            <div class="pv-chat-name">Nguyen Van A</div>
+            <div class="pv-chat-platform">Zalo</div>
+          </div>
+          <div class="pv-chat-body">Cho minh hoi bao gia dich vu SEO cho website ban hang duoc khong?</div>
+          <div class="pv-chat-time">09:14 AM &mdash; <span style="color:var(--amber)">Intent: Hoi gia</span></div>
+        </div>
+        <div class="pv-chat">
+          <div class="pv-chat-head">
+            <div class="pv-chat-avatar" style="background:linear-gradient(135deg,#0088CC,#29B6F6)">T</div>
+            <div class="pv-chat-name">Le Thi B</div>
+            <div class="pv-chat-platform">Telegram</div>
+          </div>
+          <div class="pv-chat-body">Gui CV ung tuyen vi tri Business Development nhe. [CV_LeThiB.pdf]</div>
+          <div class="pv-chat-time">09:18 AM &mdash; <span style="color:var(--purple)">Intent: Tuyen dung</span></div>
+        </div>
+        <div class="pv-chat">
+          <div class="pv-chat-head">
+            <div class="pv-chat-avatar" style="background:linear-gradient(135deg,#25D366,#128C7E)">W</div>
+            <div class="pv-chat-name">Tran Van C</div>
+            <div class="pv-chat-platform">WhatsApp</div>
+          </div>
+          <div class="pv-chat-body">Hom truoc mua goi Premium ma chua nhan duoc tai khoan, check giup minh voi</div>
+          <div class="pv-chat-time">09:22 AM &mdash; <span style="color:var(--rose)">Intent: Ho tro</span></div>
+        </div>
+        <div class="pv-chat">
+          <div class="pv-chat-head">
+            <div class="pv-chat-avatar" style="background:linear-gradient(135deg,#7360F2,#6C63FF)">V</div>
+            <div class="pv-chat-name">Pham D</div>
+            <div class="pv-chat-platform">Viber</div>
+          </div>
+          <div class="pv-chat-body">Co chuong trinh uu dai thang nay khong ban oi?</div>
+          <div class="pv-chat-time">09:25 AM &mdash; <span style="color:var(--amber)">Intent: Hoi gia</span></div>
+        </div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Channel Summary</div>
+        <div class="pv-kv"><span class="pv-k">Zalo</span><span class="pv-v">12 unread</span></div>
+        <div class="pv-kv"><span class="pv-k">Telegram</span><span class="pv-v">8 unread</span></div>
+        <div class="pv-kv"><span class="pv-k">WhatsApp</span><span class="pv-v">5 unread</span></div>
+        <div class="pv-kv"><span class="pv-k">Viber</span><span class="pv-v">3 unread</span></div>
+        <div class="pv-kv"><span class="pv-k">Messenger</span><span class="pv-v">2 unread</span></div>
+        <div class="pv-kv"><span class="pv-k" style="font-weight:600;color:var(--text)">Total</span><span class="pv-v pv-v--cyan" style="font-weight:700">30 messages</span></div>
+      </div>
+    `
+  },
+
+  'auto-replies': {
+    title: 'auto-reply-log',
+    badge: 'auto',
+    badgeClass: 'fo-type--auto',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Auto-Reply Log — Today</div>
+        <table class="pv-table">
+          <tr><th>Time</th><th>Contact</th><th>Platform</th><th>Intent</th><th>Action</th></tr>
+          <tr><td>09:14</td><td>Nguyen Van A</td><td>Zalo</td><td>Hoi gia</td><td><span class="pv-tag pv-tag--done">Auto-replied</span></td></tr>
+          <tr><td>09:18</td><td>Le Thi B</td><td>Telegram</td><td>Tuyen dung</td><td><span class="pv-tag pv-tag--pend">Forwarded HR</span></td></tr>
+          <tr><td>09:22</td><td>Tran Van C</td><td>WhatsApp</td><td>Ho tro</td><td><span class="pv-tag pv-tag--pend">Escalated CS</span></td></tr>
+          <tr><td>09:25</td><td>Pham D</td><td>Viber</td><td>Hoi gia</td><td><span class="pv-tag pv-tag--done">Auto-replied</span></td></tr>
+          <tr><td>09:31</td><td>Hoang E</td><td>Messenger</td><td>Partnership</td><td><span class="pv-tag pv-tag--pend">Escalated Sales</span></td></tr>
+        </table>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Auto-Reply Stats</div>
+        <div class="pv-kv"><span class="pv-k">Total processed</span><span class="pv-v">30</span></div>
+        <div class="pv-kv"><span class="pv-k">Auto-replied</span><span class="pv-v pv-v--green">18 (60%)</span></div>
+        <div class="pv-kv"><span class="pv-k">Escalated</span><span class="pv-v pv-v--amber">12 (40%)</span></div>
+        <div class="pv-kv"><span class="pv-k">Avg response time</span><span class="pv-v pv-v--green">&lt; 3 seconds</span></div>
+      </div>
+    `
+  },
+
+  'conversation-log': {
+    title: 'conversation-analytics.json',
+    badge: 'json',
+    badgeClass: 'fo-type--json',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Conversation Analytics</div>
+        <div class="pv-chart">{
+  <span style="color:var(--blue)">"date"</span>: <span style="color:var(--green)">"2026-04-08"</span>,
+  <span style="color:var(--blue)">"total_messages"</span>: <span style="color:var(--amber)">30</span>,
+  <span style="color:var(--blue)">"by_platform"</span>: {
+    <span style="color:var(--blue)">"zalo"</span>: <span style="color:var(--amber)">12</span>,
+    <span style="color:var(--blue)">"telegram"</span>: <span style="color:var(--amber)">8</span>,
+    <span style="color:var(--blue)">"whatsapp"</span>: <span style="color:var(--amber)">5</span>,
+    <span style="color:var(--blue)">"viber"</span>: <span style="color:var(--amber)">3</span>,
+    <span style="color:var(--blue)">"messenger"</span>: <span style="color:var(--amber)">2</span>
+  },
+  <span style="color:var(--blue)">"by_intent"</span>: {
+    <span style="color:var(--blue)">"pricing"</span>: <span style="color:var(--amber)">14</span>,
+    <span style="color:var(--blue)">"support"</span>: <span style="color:var(--amber)">8</span>,
+    <span style="color:var(--blue)">"recruitment"</span>: <span style="color:var(--amber)">5</span>,
+    <span style="color:var(--blue)">"partnership"</span>: <span style="color:var(--amber)">3</span>
+  },
+  <span style="color:var(--blue)">"avg_response_sec"</span>: <span style="color:var(--green)">2.8</span>,
+  <span style="color:var(--blue)">"auto_reply_rate"</span>: <span style="color:var(--green)">0.60</span>
+}</div>
+      </div>
+    `
+  },
+
+  'broadcast-report': {
+    title: 'broadcast-report',
+    badge: 'report',
+    badgeClass: 'fo-type--report',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Broadcast Campaign — "Promo Thang 4"</div>
+        <div class="pv-kv"><span class="pv-k">Message</span><span class="pv-v">Uu dai 30% tat ca goi dich vu — chi ap dung 08-15/04</span></div>
+        <div class="pv-kv"><span class="pv-k">Sent at</span><span class="pv-v">2026-04-08 10:00</span></div>
+        <div class="pv-kv"><span class="pv-k">Total groups</span><span class="pv-v">24 groups</span></div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Delivery by Platform</div>
+        <table class="pv-table">
+          <tr><th>Platform</th><th>Groups</th><th>Sent</th><th>Delivered</th><th>Status</th></tr>
+          <tr><td>Zalo</td><td>8</td><td>8</td><td>8</td><td><span class="pv-tag pv-tag--done">100%</span></td></tr>
+          <tr><td>Telegram</td><td>6</td><td>6</td><td>6</td><td><span class="pv-tag pv-tag--done">100%</span></td></tr>
+          <tr><td>WhatsApp</td><td>5</td><td>5</td><td>4</td><td><span class="pv-tag pv-tag--pend">80%</span></td></tr>
+          <tr><td>Viber</td><td>3</td><td>3</td><td>3</td><td><span class="pv-tag pv-tag--done">100%</span></td></tr>
+          <tr><td>Messenger</td><td>2</td><td>2</td><td>2</td><td><span class="pv-tag pv-tag--done">100%</span></td></tr>
+        </table>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Overall</div>
+        <div class="pv-kv"><span class="pv-k">Delivery rate</span><span class="pv-v pv-v--green">95.8% (23/24)</span></div>
+        <div class="pv-bar-wrap"><div class="pv-bar pv-bar--green" style="width:95.8%"></div></div>
+        <div class="pv-kv"><span class="pv-k">Failed</span><span class="pv-v pv-v--rose">1 group (WhatsApp rate limit)</span></div>
+      </div>
+    `
+  },
+
+  'engagement-stats': {
+    title: 'engagement-analytics.json',
+    badge: 'json',
+    badgeClass: 'fo-type--json',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Engagement Metrics — "Promo Thang 4"</div>
+        <div class="pv-match-bar">
+          <div class="pv-match-label">Zalo</div>
+          <div class="pv-match-track"><div class="pv-match-fill" style="width:72%;background:var(--cyan)"></div></div>
+          <div class="pv-match-val" style="color:var(--cyan)">72%</div>
+        </div>
+        <div class="pv-match-bar">
+          <div class="pv-match-label">Telegram</div>
+          <div class="pv-match-track"><div class="pv-match-fill" style="width:65%;background:var(--blue)"></div></div>
+          <div class="pv-match-val" style="color:var(--blue)">65%</div>
+        </div>
+        <div class="pv-match-bar">
+          <div class="pv-match-label">WhatsApp</div>
+          <div class="pv-match-track"><div class="pv-match-fill" style="width:58%;background:var(--green)"></div></div>
+          <div class="pv-match-val" style="color:var(--green)">58%</div>
+        </div>
+        <div class="pv-match-bar">
+          <div class="pv-match-label">Viber</div>
+          <div class="pv-match-track"><div class="pv-match-fill" style="width:45%;background:var(--purple)"></div></div>
+          <div class="pv-match-val" style="color:var(--purple)">45%</div>
+        </div>
+        <div class="pv-match-bar">
+          <div class="pv-match-label">Messenger</div>
+          <div class="pv-match-track"><div class="pv-match-fill" style="width:40%;background:var(--rose)"></div></div>
+          <div class="pv-match-val" style="color:var(--rose)">40%</div>
+        </div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Summary</div>
+        <div class="pv-kv"><span class="pv-k">Avg read rate</span><span class="pv-v pv-v--green">56%</span></div>
+        <div class="pv-kv"><span class="pv-k">Reply rate</span><span class="pv-v pv-v--amber">18%</span></div>
+        <div class="pv-kv"><span class="pv-k">Link clicks</span><span class="pv-v pv-v--blue">42 clicks</span></div>
+        <div class="pv-kv"><span class="pv-k">Best channel</span><span class="pv-v pv-v--cyan">Zalo (72% engagement)</span></div>
+      </div>
+    `
+  },
+
+  'schedule-log': {
+    title: 'schedule-queue',
+    badge: 'queue',
+    badgeClass: 'fo-type--sched',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Scheduled Broadcasts</div>
+        <table class="pv-table">
+          <tr><th>Time</th><th>Campaign</th><th>Groups</th><th>Status</th></tr>
+          <tr><td>10:00</td><td>Promo Thang 4</td><td>24</td><td><span class="pv-tag pv-tag--done">Sent</span></td></tr>
+          <tr><td>14:00</td><td>Webinar Invite</td><td>12</td><td><span class="pv-tag pv-tag--pend">Queued</span></td></tr>
+          <tr><td>18:00</td><td>End-of-day Recap</td><td>8</td><td><span class="pv-tag pv-tag--pend">Queued</span></td></tr>
+          <tr><td>Tmr 09:00</td><td>Follow-up Promo</td><td>24</td><td><span class="pv-tag pv-tag--pend">Scheduled</span></td></tr>
+        </table>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Queue Status</div>
+        <div class="pv-kv"><span class="pv-k">Sent today</span><span class="pv-v pv-v--green">1 campaign</span></div>
+        <div class="pv-kv"><span class="pv-k">In queue</span><span class="pv-v pv-v--amber">2 campaigns</span></div>
+        <div class="pv-kv"><span class="pv-k">Scheduled future</span><span class="pv-v">1 campaign</span></div>
+      </div>
+    `
+  },
+
+  'match-report': {
+    title: 'cv-match-report — AI Analysis',
+    badge: 'AI',
+    badgeClass: 'fo-type--ai',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Job Description Input</div>
+        <div class="pv-kv"><span class="pv-k">Position</span><span class="pv-v">Business Development Manager</span></div>
+        <div class="pv-kv"><span class="pv-k">Required Skills</span><span class="pv-v">Sales, B2B, CRM, English</span></div>
+        <div class="pv-kv"><span class="pv-k">Experience</span><span class="pv-v">3+ years</span></div>
+        <div class="pv-kv"><span class="pv-k">Salary range</span><span class="pv-v">25-40M VND</span></div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">CV: Le Thi B — Match Analysis</div>
+        <div class="pv-match-bar">
+          <div class="pv-match-label">Skills</div>
+          <div class="pv-match-track"><div class="pv-match-fill" style="width:85%;background:var(--green)"></div></div>
+          <div class="pv-match-val" style="color:var(--green)">85%</div>
+        </div>
+        <div class="pv-match-bar">
+          <div class="pv-match-label">Experience</div>
+          <div class="pv-match-track"><div class="pv-match-fill" style="width:90%;background:var(--green)"></div></div>
+          <div class="pv-match-val" style="color:var(--green)">90%</div>
+        </div>
+        <div class="pv-match-bar">
+          <div class="pv-match-label">Education</div>
+          <div class="pv-match-track"><div class="pv-match-fill" style="width:75%;background:var(--amber)"></div></div>
+          <div class="pv-match-val" style="color:var(--amber)">75%</div>
+        </div>
+        <div class="pv-match-bar">
+          <div class="pv-match-label">Salary Fit</div>
+          <div class="pv-match-track"><div class="pv-match-fill" style="width:70%;background:var(--amber)"></div></div>
+          <div class="pv-match-val" style="color:var(--amber)">70%</div>
+        </div>
+        <div class="pv-match-bar">
+          <div class="pv-match-label" style="font-weight:700;color:var(--text)">Overall</div>
+          <div class="pv-match-track"><div class="pv-match-fill" style="width:82%;background:var(--purple)"></div></div>
+          <div class="pv-match-val" style="color:var(--purple);font-weight:700">82%</div>
+        </div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">AI Notes</div>
+        <div style="color:var(--text-muted);line-height:1.7">
+          <strong style="color:var(--green)">Strengths:</strong> 4 nam kinh nghiem B2B sales, co chung chi CRM Salesforce, tieng Anh IELTS 7.0<br>
+          <strong style="color:var(--amber)">Gaps:</strong> Chua co kinh nghiem nganh tech/SaaS, salary expectation 35M (trong range)<br>
+          <strong style="color:var(--purple)">Recommendation:</strong> <span class="pv-tag pv-tag--match">SHORTLISTED</span> — Nen moi phong van vong 1
+        </div>
+      </div>
+    `
+  },
+
+  'candidate-ranking': {
+    title: 'candidate-ranking',
+    badge: 'rank',
+    badgeClass: 'fo-type--rank',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Candidate Ranking — BDM Position</div>
+        <table class="pv-table">
+          <tr><th>#</th><th>Candidate</th><th>Source</th><th>Skills</th><th>Exp</th><th>Score</th><th>Status</th></tr>
+          <tr>
+            <td style="color:var(--amber);font-weight:700">1</td>
+            <td style="color:var(--text)">Le Thi B</td>
+            <td>Telegram</td>
+            <td>85%</td>
+            <td>4y</td>
+            <td style="color:var(--green);font-weight:700">82%</td>
+            <td><span class="pv-tag pv-tag--high">Top</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text-dim)">2</td>
+            <td style="color:var(--text)">Tran Minh F</td>
+            <td>Email</td>
+            <td>78%</td>
+            <td>5y</td>
+            <td style="color:var(--green);font-weight:700">76%</td>
+            <td><span class="pv-tag pv-tag--high">Top</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text-dim)">3</td>
+            <td style="color:var(--text)">Nguyen H</td>
+            <td>Zalo</td>
+            <td>70%</td>
+            <td>3y</td>
+            <td style="color:var(--amber)">68%</td>
+            <td><span class="pv-tag pv-tag--med">Maybe</span></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text-dim)">4</td>
+            <td style="color:var(--text)">Pham K</td>
+            <td>WhatsApp</td>
+            <td>55%</td>
+            <td>1y</td>
+            <td style="color:var(--rose)">45%</td>
+            <td><span class="pv-tag pv-tag--low">Reject</span></td>
+          </tr>
+        </table>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Summary</div>
+        <div class="pv-kv"><span class="pv-k">Total CVs received</span><span class="pv-v">4</span></div>
+        <div class="pv-kv"><span class="pv-k">Shortlisted (&gt;70%)</span><span class="pv-v pv-v--green">2 candidates</span></div>
+        <div class="pv-kv"><span class="pv-k">Maybe (50-70%)</span><span class="pv-v pv-v--amber">1 candidate</span></div>
+        <div class="pv-kv"><span class="pv-k">Rejected (&lt;50%)</span><span class="pv-v pv-v--rose">1 candidate</span></div>
+      </div>
+    `
+  },
+
+  'shortlist': {
+    title: 'shortlist.md',
+    badge: '.md',
+    badgeClass: 'fo-type--md',
+    html: `
+      <div class="pv-section">
+        <div class="pv-h">Shortlist — BDM Position</div>
+        <div class="pv-kv"><span class="pv-k">Generated</span><span class="pv-v">2026-04-08 10:45</span></div>
+        <div class="pv-kv"><span class="pv-k">Total applicants</span><span class="pv-v">4</span></div>
+        <div class="pv-kv"><span class="pv-k">Shortlisted</span><span class="pv-v pv-v--green">2</span></div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Recommended Candidates</div>
+        <div class="pv-chat" style="border-left:3px solid var(--green)">
+          <div style="font-weight:600;color:var(--text);margin-bottom:4px">1. Le Thi B — 82% match</div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.6">
+            4 nam B2B Sales | Salesforce certified | IELTS 7.0<br>
+            Source: Telegram | Salary: 35M (in range)<br>
+            <strong style="color:var(--green)">Action:</strong> Moi phong van vong 1 — uu tien
+          </div>
+        </div>
+        <div class="pv-chat" style="border-left:3px solid var(--green)">
+          <div style="font-weight:600;color:var(--text);margin-bottom:4px">2. Tran Minh F — 76% match</div>
+          <div style="font-size:11px;color:var(--text-muted);line-height:1.6">
+            5 nam Sales Manager | HubSpot exp | Tieng Anh fluent<br>
+            Source: Email | Salary: 38M (in range)<br>
+            <strong style="color:var(--green)">Action:</strong> Moi phong van vong 1
+          </div>
+        </div>
+      </div>
+      <div class="pv-section">
+        <div class="pv-h">Next Steps</div>
+        <div class="pv-kv"><span class="pv-k">Schedule interview</span><span class="pv-v pv-v--orange">Auto-send via OpenClaw</span></div>
+        <div class="pv-kv"><span class="pv-k">Notify HR team</span><span class="pv-v pv-v--green">Done</span></div>
+        <div class="pv-kv"><span class="pv-k">Send rejection</span><span class="pv-v pv-v--amber">1 pending (Pham K)</span></div>
+      </div>
+    `
+  }
+
+};
+
+/* ── Modal logic ────────────────────────────────────────── */
+const overlay = document.getElementById('modalOverlay');
+const modalTitle = document.getElementById('modalTitle');
+const modalBadge = document.getElementById('modalBadge');
+const modalBody = document.getElementById('modalBody');
+const modalClose = document.getElementById('modalClose');
+
+function openModal(key) {
+  const p = previews[key];
+  if (!p) return;
+  modalTitle.textContent = p.title;
+  modalBadge.textContent = p.badge;
+  modalBadge.className = 'modal-bar-badge ' + p.badgeClass;
+  modalBody.innerHTML = p.html;
+  overlay.classList.add('active');
+}
+
+function closeModal() { overlay.classList.remove('active'); }
+
+document.querySelectorAll('.fo-item[data-preview]').forEach(function(el) {
+  el.addEventListener('click', function() { openModal(this.dataset.preview); });
+});
+overlay.addEventListener('click', function(e) { if (e.target === overlay) closeModal(); });
+modalClose.addEventListener('click', closeModal);
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+</script>
+
+</body>
+</html>
