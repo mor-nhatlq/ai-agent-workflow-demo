@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DDD-Aware SDLC · V2 — Refund Task Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-0: #0B1220;
+    --bg-1: #111A2E;
+    --bg-2: #18233D;
+    --bg-3: #1F2B47;
+    --border: #243049;
+    --border-soft: #1B2540;
+
+    --text-1: #E6ECF6;
+    --text-2: #B8C2D4;
+    --text-3: #7B8AA6;
+    --text-4: #56668A;
+
+    --c-input:    #5B9DD9;
+    --c-discover: #8C7AC4;
+    --c-plan:     #6B8DBF;
+    --c-impl:     #5DA88C;
+    --c-test:     #C8A35A;
+    --c-review:   #C77676;
+    --c-deliver:  #5BA3B0;
+
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --font-sans: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-0);
+    color: var(--text-1);
+    min-height: 100vh;
+    padding: 20px 12px 40px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .frame {
+    max-width: 1600px; margin: 0 auto;
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+  }
+
+  .bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 18px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+  }
+  .bar .dots { display: flex; gap: 6px; }
+  .bar .dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .bar .dots i:nth-child(1) { background: #E36471; }
+  .bar .dots i:nth-child(2) { background: #E5B257; }
+  .bar .dots i:nth-child(3) { background: #5DB47A; }
+  .bar .path {
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-3);
+  }
+
+  /* Two-column layout for top section */
+  .top-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 16px;
+    margin: 24px 24px 8px;
+  }
+  @media (max-width: 980px) {
+    .top-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Task banner */
+  .task {
+    padding: 18px 22px;
+    background: linear-gradient(180deg, rgba(140,122,196,0.07), transparent), var(--bg-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--c-discover);
+    border-radius: 10px;
+  }
+  .task-tag {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    color: var(--c-discover); letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .task h2 {
+    font-family: var(--font-mono); font-size: 18px; font-weight: 700;
+    margin-top: 4px;
+  }
+  .task p { font-size: 13px; color: var(--text-2); margin-top: 6px; max-width: 880px; }
+  .task .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chip {
+    font-family: var(--font-mono); font-size: 11px;
+    padding: 3px 10px; border-radius: 4px;
+    background: var(--bg-1); border: 1px solid var(--border);
+    color: var(--text-2);
+  }
+  .chip b { color: var(--text-1); font-weight: 600; }
+  .hint {
+    margin-top: 12px;
+    font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hint .kbd {
+    background: var(--bg-1); border: 1px solid var(--border); border-bottom-width: 2px;
+    padding: 1px 7px; border-radius: 4px; color: var(--text-2); font-size: 10.5px;
+  }
+
+  /* Diagram */
+  .diagram {
+    padding: 16px 12px 4px;
+    overflow-x: auto;
+  }
+  .mermaid { font-family: var(--font-mono) !important; }
+  .mermaid .node[id*="flowchart-"] { cursor: pointer; }
+  .mermaid .node:hover rect,
+  .mermaid .node:hover polygon {
+    filter: brightness(1.25);
+  }
+
+  /* Legend */
+  .legend {
+    display: flex; flex-wrap: wrap; justify-content: center; gap: 18px;
+    padding: 14px 24px;
+    margin: 0 24px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-family: var(--font-mono); font-size: 11.5px; color: var(--text-2);
+  }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .legend i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+
+  /* Project structure + AWS architecture cards */
+  .struct {
+    padding: 18px 22px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--c-deliver);
+    border-radius: 10px;
+  }
+  .struct-tag {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    color: var(--c-deliver); letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .struct h3 {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 700;
+    margin: 4px 0 10px;
+  }
+  .struct-tabs {
+    display: flex; gap: 4px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .struct-tab {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+    color: var(--text-3);
+    padding: 6px 10px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    background: none; border-top: none; border-left: none; border-right: none;
+  }
+  .struct-tab:hover { color: var(--text-2); }
+  .struct-tab.is-active { color: var(--c-deliver); border-bottom-color: var(--c-deliver); }
+
+  .struct-pane { display: none; }
+  .struct-pane.is-active { display: block; }
+
+  .tree {
+    background: #0E0E10;
+    border: 1px solid #2A2A30;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: var(--font-mono); font-size: 11.5px;
+    color: #D4D4D8;
+    line-height: 1.65;
+    white-space: pre;
+    overflow-x: auto;
+    margin: 0;
+  }
+  .tree .dir { color: #60A5FA; font-weight: 600; }
+  .tree .ctx { color: #C084FC; font-weight: 600; }
+  .tree .file { color: #D4D4D8; }
+  .tree .imp { color: #5DA88C; font-weight: 600; }
+  .tree .ext { color: #A1A1AA; }
+  .tree .com { color: #52525B; font-style: italic; }
+
+  .aws {
+    background: #0E0E10;
+    border: 1px solid #2A2A30;
+    border-radius: 8px;
+    padding: 14px;
+    font-family: var(--font-mono); font-size: 11.5px;
+    color: #D4D4D8;
+    line-height: 1.65;
+  }
+  .aws-row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 10px;
+    padding: 5px 0;
+    border-bottom: 1px dashed #1F1F25;
+  }
+  .aws-row:last-child { border-bottom: 0; }
+  .aws-svc {
+    color: #E89A4F; font-weight: 600;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .aws-svc i {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #E89A4F; display: inline-block;
+  }
+  .aws-desc { color: #A1A1AA; }
+  .aws-desc b { color: #D4D4D8; }
+  .aws-desc code {
+    background: #1A1A1F; border: 1px solid #2A2A30;
+    padding: 0 5px; border-radius: 3px;
+    font-size: 10.5px;
+    color: #C9D5E8;
+  }
+
+  .toolings {
+    margin: 16px 24px 0;
+    padding: 14px 18px;
+    background: var(--bg-2);
+    border: 1px solid var(--border); border-radius: 10px;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;
+  }
+  .toolings .tt {
+    font-family: var(--font-mono); font-size: 12px; line-height: 1.6;
+  }
+  .toolings .tt b { color: var(--text-1); }
+  .toolings .tt .lab {
+    display: inline-block;
+    font-size: 10px; font-weight: 700;
+    color: var(--bg-0); background: var(--text-2);
+    padding: 1px 6px; border-radius: 3px;
+    margin-right: 8px;
+    letter-spacing: 0.5px;
+  }
+  .toolings .tt.os .lab { background: var(--c-plan); }
+  .toolings .tt.sp .lab { background: var(--c-impl); }
+  .toolings .tt em { color: var(--text-3); font-style: normal; }
+
+  .foot {
+    padding: 14px 32px 22px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    margin-top: 18px;
+    font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
+  }
+
+  /* ── MODAL ─────────────────────────────────────────────── */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(7,11,22,0.78);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 24px;
+    z-index: 1000;
+  }
+  .overlay.is-open { display: flex; }
+  .modal {
+    background: var(--bg-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 100%; max-width: 760px;
+    max-height: 86vh;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  }
+  .modal-head {
+    padding: 14px 20px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .modal-dot {
+    width: 11px; height: 11px; border-radius: 50%;
+  }
+  .modal-title {
+    font-family: var(--font-mono); font-size: 14px; font-weight: 600;
+    flex: 1;
+  }
+  .modal-phase {
+    font-family: var(--font-mono); font-size: 10.5px; font-weight: 600;
+    color: var(--text-3); letter-spacing: 0.5px; text-transform: uppercase;
+    background: var(--bg-1); border: 1px solid var(--border);
+    padding: 3px 8px; border-radius: 4px;
+  }
+  .modal-close {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--bg-3); border: 1px solid var(--border);
+    cursor: pointer; color: var(--text-2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+  .modal-close:hover { background: var(--c-review); color: white; }
+
+  .modal-body {
+    padding: 18px 22px;
+    overflow-y: auto;
+  }
+  .sec {
+    margin-bottom: 18px;
+  }
+  .sec-h {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--text-3);
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sec-h .icn {
+    width: 16px; height: 16px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 4px;
+    font-size: 10px; font-weight: 700;
+  }
+  .sec-h.in  .icn { background: rgba(91,157,217,0.18); color: var(--c-input); }
+  .sec-h.cli .icn { background: rgba(140,122,196,0.18); color: var(--c-discover); }
+  .sec-h.out .icn { background: rgba(93,168,140,0.18); color: var(--c-impl); }
+
+  .list { list-style: none; padding: 0; }
+  .list li {
+    font-size: 13px; color: var(--text-2);
+    padding: 4px 0 4px 18px;
+    position: relative;
+    line-height: 1.55;
+  }
+  .list li::before {
+    content: ''; position: absolute; left: 4px; top: 11px;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--text-4);
+  }
+  .list li code {
+    font-family: var(--font-mono); font-size: 12px;
+    background: var(--bg-2); border: 1px solid var(--border-soft);
+    padding: 1px 6px; border-radius: 3px;
+    color: var(--text-1);
+  }
+
+  .term {
+    background: #0E0E10;
+    border: 1px solid #2A2A30;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .term-bar {
+    background: #1A1A1F;
+    padding: 8px 14px;
+    border-bottom: 1px solid #2A2A30;
+    font-family: var(--font-mono); font-size: 10.5px; color: #8A8A95;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .term-bar .tdots { display: flex; gap: 6px; margin-right: 4px; }
+  .term-bar .tdots i {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #3A3A42;
+  }
+  .term-bar .tdots i:first-child { background: #E36471; }
+  .term-bar .tdots i:nth-child(2) { background: #E5B257; }
+  .term-bar .tdots i:nth-child(3) { background: #5DB47A; }
+  .term-bar .lab {
+    font-size: 9.5px; font-weight: 700;
+    background: var(--c-plan); color: #0E0E10;
+    padding: 2px 7px; border-radius: 3px;
+    letter-spacing: 0.4px;
+    margin-left: auto;
+  }
+  .term-bar .lab.sp { background: var(--c-impl); }
+  .term pre {
+    padding: 16px 18px;
+    font-family: var(--font-mono); font-size: 12.5px;
+    color: #D4D4D8;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    overflow-x: auto;
+    background: #0E0E10;
+  }
+
+  /* Welcome banner inside terminal */
+  .term .welcome {
+    color: #E89A4F;
+    font-weight: 500;
+    margin-bottom: 14px;
+    line-height: 1.55;
+  }
+  .term .welcome .star { color: #E89A4F; }
+  .term .welcome .dim  { color: #71717A; font-weight: 400; }
+  .term .welcome .cwd  { color: #A1A1AA; }
+
+  /* Tokens */
+  .term .pmt   { color: #71717A; user-select: none; font-weight: 600; }
+  .term .you   { color: #FAFAFA; }
+  .term .bullet{ color: #E89A4F; font-weight: 700; }
+  .term .tool  { color: #FAFAFA; font-weight: 600; }
+  .term .arg   { color: #A1A1AA; }
+  .term .arrow { color: #52525B; user-select: none; }
+  .term .out   { color: #A1A1AA; }
+  .term .ok    { color: #5DB47A; }
+  .term .warn  { color: #E5B257; }
+  .term .err   { color: #E36471; }
+  .term .key   { color: #A78BFA; }
+  .term .str   { color: #B8E08D; }
+  .term .com   { color: #52525B; font-style: italic; }
+  .term .status{ color: #A78BFA; margin-top: 10px; display: block; }
+  .term .status .star { animation: spin 2s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .term .status .star { animation: none; }
+  }
+
+  .note {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: var(--bg-2);
+    border-left: 2px solid var(--c-discover);
+    border-radius: 4px;
+    font-size: 12px; color: var(--text-2);
+  }
+
+  /* Artifact file cards */
+  .artifact {
+    margin-top: 10px;
+    background: #0E0E10;
+    border: 1px solid #2A2A30;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .artifact-head {
+    background: #1A1A1F;
+    padding: 7px 12px;
+    border-bottom: 1px solid #2A2A30;
+    font-family: var(--font-mono); font-size: 11px;
+    color: #C9D1D9;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .artifact-head .ico {
+    width: 14px; height: 14px;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .artifact-head .file { color: #FAFAFA; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .artifact-head .lang {
+    font-size: 9.5px; font-weight: 700; letter-spacing: 0.4px;
+    background: #2A2A30; color: #A1A1AA;
+    padding: 2px 7px; border-radius: 3px;
+    text-transform: uppercase;
+  }
+  .artifact pre {
+    padding: 12px 14px;
+    font-family: var(--font-mono); font-size: 11.5px;
+    color: #D4D4D8;
+    line-height: 1.6;
+    white-space: pre;
+    overflow-x: auto;
+    background: #0E0E10;
+    margin: 0;
+    tab-size: 2;
+  }
+  .artifact pre .h  { color: #E89A4F; font-weight: 600; }
+  .artifact pre .k  { color: #A78BFA; }
+  .artifact pre .s  { color: #B8E08D; }
+  .artifact pre .c  { color: #52525B; font-style: italic; }
+  .artifact pre .n  { color: #FBBF24; }
+  .artifact pre .o  { color: #71717A; }
+  .artifact pre .ok { color: #5DB47A; font-weight: 700; }
+  .artifact pre .er { color: #E36471; font-weight: 700; }
+
+  /* "Node này làm gì?" callout — top of modal */
+  .purpose {
+    margin-bottom: 18px;
+    padding: 14px 16px;
+    background: linear-gradient(180deg, rgba(192,132,252,0.08), rgba(192,132,252,0.02));
+    border: 1px solid rgba(192,132,252,0.25);
+    border-left: 3px solid #C084FC;
+    border-radius: 8px;
+  }
+  .purpose-h {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
+    color: #C084FC; letter-spacing: 0.6px; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .purpose-h .ico {
+    width: 16px; height: 16px; border-radius: 4px;
+    background: rgba(192,132,252,0.18); color: #C084FC;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+  }
+  .purpose-body {
+    font-size: 13.5px; color: var(--text-1); line-height: 1.6;
+  }
+  .purpose-body code {
+    font-family: var(--font-mono); font-size: 12px;
+    background: var(--bg-2); border: 1px solid var(--border-soft);
+    padding: 1px 6px; border-radius: 3px;
+    color: #C084FC;
+  }
+
+  @media (max-width: 760px) {
+    .toolings { grid-template-columns: 1fr; }
+    .legend { gap: 10px; font-size: 10.5px; }
+    .modal { max-height: 92vh; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <div class="bar">
+    <div class="dots"><i></i><i></i><i></i></div>
+    <div class="path">walkthrough — refund-feature.ddd-sdlc-v2 · click bất kỳ node để xem chi tiết</div>
+  </div>
+
+  <div class="top-grid">
+
+    <!-- ── Sample task ─────────────────────────────── -->
+    <div class="task">
+      <span class="task-tag">// Sample task walking through pipeline</span>
+      <h2>FT-204 · Cho phép Customer yêu cầu Refund cho đơn đã thanh toán</h2>
+
+      <p style="font-size:13px;color:var(--text-2);margin-top:8px"><b>Background</b> · Hiện tại Customer Service phải tạo refund thủ công qua admin tool. 18% support ticket/tháng là về refund, average resolution 36h. Finance team cần audit trail rõ &amp; control ngưỡng phê duyệt.</p>
+
+      <p style="font-size:13px;color:var(--text-2);margin-top:10px"><b>User stories</b></p>
+      <ul style="font-size:12.5px;color:var(--text-2);margin:4px 0 0 16px;line-height:1.7">
+        <li>Là <b>Customer</b>, tôi muốn yêu cầu refund online cho đơn đã settle, để không phải gọi support.</li>
+        <li>Là <b>Manager</b>, tôi muốn approve/reject các refund &gt; 5M VND, để kiểm soát chi phí lớn.</li>
+        <li>Là <b>Finance Lead</b>, tôi muốn audit trail mọi refund, để báo cáo cuối tháng.</li>
+        <li>Là <b>Customer</b>, tôi muốn nhận email xác nhận khi refund completed/failed, để biết tiền đã về chưa.</li>
+      </ul>
+
+      <p style="font-size:13px;color:var(--text-2);margin-top:10px"><b>Acceptance criteria</b></p>
+      <ul style="font-size:12.5px;color:var(--text-2);margin:4px 0 0 16px;line-height:1.7">
+        <li><code>EligibilityWindow</code> = 30 ngày tính từ <code>order.settledAt</code>; quá → reject với lý do <code>OutsideEligibilityWindow</code>.</li>
+        <li><code>amount &gt; 5,000,000 VND</code> → state <code>PendingApproval</code>, đợi Manager approve trong 24h, không thì auto-reject.</li>
+        <li><code>amount ≤ payment.amount</code> (cho phép <i>partial refund</i>); vi phạm → 400 với <code>InvalidRefundAmount</code>.</li>
+        <li>Refund success → publish <code>RefundCompleted</code> event topic <code>billing.refund.v1</code>; Notification gửi email Customer + Slack #finance.</li>
+        <li>Refund failed → retry 3 lần exp backoff; sau đó publish <code>RefundFailed</code>, alert oncall.</li>
+        <li>Identity unreachable → state <code>PendingVerification</code>, không block; retry job xử lý.</li>
+      </ul>
+
+      <p style="font-size:13px;color:var(--text-2);margin-top:10px"><b>Out of scope</b> · Currency conversion (FX) · Refund cho subscription · Charge-back từ ngân hàng.</p>
+
+      <div class="chips" style="margin-top:14px">
+        <span class="chip"><b>ticket</b> FT-204</span>
+        <span class="chip"><b>primary</b> Billing</span>
+        <span class="chip"><b>integrations</b> Identity · Notification</span>
+        <span class="chip"><b>est</b> 13 SP · 5 ngày</span>
+        <span class="chip"><b>owner</b> An (Billing context)</span>
+        <span class="chip"><b>stakeholders</b> Finance · CS · Legal</span>
+        <span class="chip"><b>risk</b> partial refund · FX edge case</span>
+      </div>
+
+      <div class="hint">
+        <span>💡</span>
+        <span>Click bất kỳ node trên diagram để xem AI làm gì với <b>Claude Code CLI</b> + OpenSpec + Superpowers. Thoát: <span class="kbd">Esc</span></span>
+      </div>
+    </div>
+
+    <!-- ── Project structure + AWS deploy ─────────── -->
+    <div class="struct">
+      <span class="struct-tag">// Project layout · Deploy target</span>
+      <h3>Cấu trúc dự án &amp; AWS Architecture</h3>
+
+      <div class="struct-tabs" role="tablist">
+        <button class="struct-tab is-active" data-pane="repo" onclick="switchPane(this,'repo')">Repo Layout</button>
+        <button class="struct-tab" data-pane="ctx" onclick="switchPane(this,'ctx')">Per-Context</button>
+        <button class="struct-tab" data-pane="aws" onclick="switchPane(this,'aws')">AWS Deploy</button>
+      </div>
+
+      <div class="struct-pane is-active" id="pane-repo">
+<pre class="tree"><span class="dir">ddd-platform/</span>            <span class="com"># monorepo</span>
+├── <span class="dir">services/</span>
+│   ├── <span class="ctx">billing/</span>          <span class="com"># Bounded Context · Billing</span>
+│   ├── <span class="ctx">identity/</span>         <span class="com"># Bounded Context · Identity</span>
+│   └── <span class="ctx">notification/</span>     <span class="com"># Bounded Context · Notification</span>
+├── <span class="dir">shared/</span>
+│   ├── <span class="file">glossary.md</span>          <span class="com"># Ubiquitous Language v3.3</span>
+│   ├── <span class="file">context-map.yaml</span>     <span class="com"># quan hệ giữa contexts</span>
+│   ├── <span class="dir">adr/</span>                 <span class="com"># Architectural Decision Records</span>
+│   └── <span class="dir">schemas/</span>             <span class="com"># AsyncAPI · JSON-Schema</span>
+├── <span class="dir">infra/</span>                  <span class="com"># Cross-service AWS infra</span>
+│   ├── <span class="dir">eventbridge/</span>         <span class="com"># bus + rules</span>
+│   ├── <span class="dir">api-gateway/</span>
+│   └── <span class="dir">networking/</span>          <span class="com"># VPC, subnets, SGs</span>
+├── <span class="dir">openspec/</span>
+│   ├── <span class="dir">specs/</span>               <span class="com"># spec hiện tại</span>
+│   ├── <span class="dir">changes/</span>             <span class="com"># proposals đang làm</span>
+│   └── <span class="dir">archive/</span>             <span class="com"># changes đã merge</span>
+├── <span class="dir">.github/workflows/</span>      <span class="com"># CI · arch-lint, contract-test</span>
+└── <span class="dir">.claude/</span>
+    ├── <span class="file">settings.json</span>        <span class="com"># hooks, permissions</span>
+    ├── <span class="dir">hooks/</span>               <span class="com"># pre-commit lint:arch, lint:glossary</span>
+    └── <span class="dir">skills/</span>              <span class="com"># custom domain skills</span></pre>
+      </div>
+
+      <div class="struct-pane" id="pane-ctx">
+<pre class="tree"><span class="dir">services/billing/</span>
+├── <span class="dir">src/billing/</span>
+│   ├── <span class="imp">domain/</span>              <span class="com"># thuần nghiệp vụ — không import infra</span>
+│   │   ├── <span class="file">refund_request.py</span>     <span class="com"># Aggregate root</span>
+│   │   ├── <span class="dir">value_objects/</span>        <span class="com"># Money, RefundId, ...</span>
+│   │   ├── <span class="dir">events/</span>               <span class="com"># RefundRequested, ...</span>
+│   │   └── <span class="dir">services/</span>             <span class="com"># RefundEligibilityChecker</span>
+│   ├── <span class="imp">application/</span>         <span class="com"># orchestration, transactions</span>
+│   │   └── <span class="file">refund_service.py</span>
+│   ├── <span class="imp">infrastructure/</span>      <span class="com"># adapters cụ thể</span>
+│   │   ├── <span class="dir">repositories/</span>        <span class="com"># Postgres impl</span>
+│   │   ├── <span class="dir">adapters/</span>            <span class="com"># BillingCustomerAdapter (ACL)</span>
+│   │   └── <span class="dir">events/</span>              <span class="com"># EventBridge publisher</span>
+│   └── <span class="imp">interface/</span>           <span class="com"># entry points</span>
+│       ├── <span class="dir">api/</span>                 <span class="com"># REST handlers</span>
+│       └── <span class="dir">consumers/</span>           <span class="com"># SQS event consumers</span>
+├── <span class="dir">tests/</span>                  <span class="com"># unit + integration</span>
+├── <span class="dir">features/</span>               <span class="com"># BDD scenarios (.feature)</span>
+├── <span class="dir">pacts/</span>                  <span class="com"># consumer-driven contracts</span>
+├── <span class="dir">infra/</span>                  <span class="com"># service-specific AWS CDK</span>
+├── <span class="ext">Dockerfile</span>
+└── <span class="ext">pyproject.toml</span></pre>
+      </div>
+
+      <div class="struct-pane" id="pane-aws">
+        <div class="aws">
+          <div class="aws-row">
+            <span class="aws-svc"><i></i>API Gateway</span>
+            <span class="aws-desc"><b>REST entrypoint</b> · <code>POST /refunds</code> · OAuth2 + Cognito JWT</span>
+          </div>
+          <div class="aws-row">
+            <span class="aws-svc"><i></i>ALB + ECS Fargate</span>
+            <span class="aws-desc"><b>Billing service</b> container · auto-scaling 2–10 task · LB target group</span>
+          </div>
+          <div class="aws-row">
+            <span class="aws-svc"><i></i>RDS Aurora Postgres</span>
+            <span class="aws-desc"><b>Billing DB</b> · Multi-AZ · point-in-time recovery · IAM auth</span>
+          </div>
+          <div class="aws-row">
+            <span class="aws-svc"><i></i>EventBridge</span>
+            <span class="aws-desc"><b>Cross-context bus</b> · topic <code>billing.refund.v1</code> · rules → SQS Notification</span>
+          </div>
+          <div class="aws-row">
+            <span class="aws-svc"><i></i>SQS + SNS</span>
+            <span class="aws-desc"><b>Async fan-out</b> · DLQ với redrive policy · alarm khi DLQ &gt; 0</span>
+          </div>
+          <div class="aws-row">
+            <span class="aws-svc"><i></i>Glue Schema Registry</span>
+            <span class="aws-desc"><b>Event schema versioning</b> · enforce <code>BACKWARD</code> compatibility</span>
+          </div>
+          <div class="aws-row">
+            <span class="aws-svc"><i></i>ECR</span>
+            <span class="aws-desc"><b>Container registry</b> · image scan · tag <code>billing:&lt;sha&gt;</code></span>
+          </div>
+          <div class="aws-row">
+            <span class="aws-svc"><i></i>Secrets Manager</span>
+            <span class="aws-desc"><b>Credentials</b> · DB password, Stripe key · auto-rotate 30d</span>
+          </div>
+          <div class="aws-row">
+            <span class="aws-svc"><i></i>CloudWatch + X-Ray</span>
+            <span class="aws-desc"><b>Observability</b> · structured logs (JSON) · trace mỗi refund end-to-end</span>
+          </div>
+          <div class="aws-row">
+            <span class="aws-svc"><i></i>CodePipeline + CodeBuild</span>
+            <span class="aws-desc"><b>CI/CD</b> · build → contract-test → deploy staging → manual approval → prod</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <!-- /top-grid -->
+
+  <div class="toolings">
+    <div class="tt os"><span class="lab">OPENSPEC</span><b>Tài liệu hoá &amp; quản lý spec</b><br><em>/openspec:propose · /openspec:apply · /openspec:archive — version-controlled spec, change proposal, task list</em></div>
+    <div class="tt sp"><span class="lab">SUPERPOWERS</span><b>Coding workflow</b><br><em>brainstorming · writing-plans · executing-plans · TDD · subagent-driven-development · plan-review-gate · code-reviewer</em></div>
+  </div>
+
+  <div class="diagram">
+<pre class="mermaid">
+flowchart TB
+
+  classDef input    fill:#152033,stroke:#5B9DD9,stroke-width:1.5px,color:#D8E5F2
+  classDef discover fill:#1A1A2E,stroke:#8C7AC4,stroke-width:1.5px,color:#E0DAF0
+  classDef plan     fill:#162133,stroke:#6B8DBF,stroke-width:1.5px,color:#D7E0EE
+  classDef impl     fill:#152622,stroke:#5DA88C,stroke-width:1.5px,color:#D5E8DF
+  classDef test     fill:#26201A,stroke:#C8A35A,stroke-width:1.5px,color:#EEE0C2
+  classDef review   fill:#261A1A,stroke:#C77676,stroke-width:1.5px,color:#EFD3D3
+  classDef deliver  fill:#152627,stroke:#5BA3B0,stroke-width:1.5px,color:#CFE6E9
+  classDef phase    fill:#101827,stroke:#26334E,stroke-width:1px,color:#A6B3CA
+
+  USER["User / Product Owner<br/>Định nghĩa yêu cầu FT-204"]:::input
+
+  subgraph P0["PHASE 0 · Domain Discovery (A)"]
+    direction TB
+    ES["Discoverer Agent<br/>Event Storming"]:::discover
+    DE["Domain Expert<br/>Validate Language"]:::discover
+    GL0["Glossary v0<br/>Refund terms"]:::discover
+    CM["Context Map<br/>Billing · Identity · Notification"]:::discover
+  end
+
+  subgraph P1["PHASE 1 · Strategic + Tactical Plan (B)"]
+    direction TB
+    PS["Strategic Plan<br/>ACL · Integration"]:::plan
+    PT["Tactical Plan<br/>Aggregates · Events"]:::plan
+  end
+
+  subgraph P2["PHASE 2 · Implementation (C)"]
+    direction TB
+    DEV["Developer Agent<br/>Layered Code"]:::impl
+    LINT["Architecture + Glossary<br/>Linter"]:::impl
+  end
+
+  subgraph P3["PHASE 3 · Testing (D)"]
+    direction TB
+    SBE["Specification by Example<br/>Given-When-Then"]:::test
+    UIT["Unit · Integration · E2E"]:::test
+    CT["Contract Test"]:::test
+  end
+
+  subgraph P4["PHASE 4 · Review (E)"]
+    direction TB
+    CR["Code Reviewer<br/>Quality and Security"]:::review
+    DMR["Domain Model Reviewer<br/>Aggregate · ACL · Drift"]:::review
+  end
+
+  subgraph P5["PHASE 5 · Delivery (G)"]
+    direction TB
+    PR["Commit + PR + Deploy"]:::deliver
+    SY["Glossary / ContextMap / ADR<br/>Sync and Archive"]:::deliver
+  end
+
+  USER -->|"Yêu cầu"| ES
+  ES --> DE
+  DE --> GL0
+  GL0 --> CM
+  CM -->|"Domain Model v0"| PS
+  PS --> PT
+  PT -->|"Plan and Specs"| DEV
+  DEV --> LINT
+  LINT -->|"Source Code"| SBE
+  SBE --> UIT
+  UIT --> CT
+  CT -->|"Test Results"| CR
+  CR --> DMR
+  DMR -->|"Approved"| PR
+  PR --> SY
+
+  CT -.->|"Tests Fail · Re-test"| DEV
+  DMR -.->|"Issues Found · Refactor"| DEV
+  DMR -.->|"(F) Deeper Insight"| PS
+  SY -.->|"Knowledge Sync"| ES
+
+  class P0,P1,P2,P3,P4,P5 phase
+
+  click USER call openNode("USER")
+  click ES call openNode("ES")
+  click DE call openNode("DE")
+  click GL0 call openNode("GL0")
+  click CM call openNode("CM")
+  click PS call openNode("PS")
+  click PT call openNode("PT")
+  click DEV call openNode("DEV")
+  click LINT call openNode("LINT")
+  click SBE call openNode("SBE")
+  click UIT call openNode("UIT")
+  click CT call openNode("CT")
+  click CR call openNode("CR")
+  click DMR call openNode("DMR")
+  click PR call openNode("PR")
+  click SY call openNode("SY")
+</pre>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:#5B9DD9"></i>User Input</span>
+    <span><i style="background:#8C7AC4"></i>Discovery</span>
+    <span><i style="background:#6B8DBF"></i>Plan</span>
+    <span><i style="background:#5DA88C"></i>Implementation</span>
+    <span><i style="background:#C8A35A"></i>Testing</span>
+    <span><i style="background:#C77676"></i>Review</span>
+    <span><i style="background:#5BA3B0"></i>Delivery</span>
+  </div>
+
+  <div class="foot">
+    DDD-Aware SDLC · V2 &mdash; Refund Feature Walkthrough · Claude Code + OpenSpec + Superpowers
+  </div>
+
+</div>
+
+<!-- ── MODAL ────────────────────────────────────────────── -->
+<div class="overlay" id="overlay" onclick="if(event.target.id==='overlay')closeNode()">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-dot" id="mDot"></span>
+      <span class="modal-title" id="mTitle">—</span>
+      <span class="modal-phase" id="mPhase">—</span>
+      <button class="modal-close" onclick="closeNode()" aria-label="Đóng">✕</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    securityLevel: 'loose',
+    theme: 'base',
+    themeVariables: {
+      fontFamily: 'JetBrains Mono, ui-monospace, monospace',
+      fontSize: '13px',
+      background: '#111A2E',
+      primaryColor: '#152033',
+      primaryTextColor: '#E6ECF6',
+      primaryBorderColor: '#26334E',
+      lineColor: '#3E4D6E',
+      secondaryColor: '#18233D',
+      tertiaryColor: '#0B1220',
+      clusterBkg: 'rgba(20,28,46,0.55)',
+      clusterBorder: '#26334E',
+      titleColor: '#A6B3CA',
+      edgeLabelBackground: '#1A2540'
+    },
+    flowchart: {
+      curve: 'basis',
+      padding: 18,
+      nodeSpacing: 30,
+      rankSpacing: 50,
+      htmlLabels: true,
+      useMaxWidth: true
+    }
+  });
+
+  // ────────────── Node detail data ──────────────
+  const COLORS = {
+    input:    '#5B9DD9',
+    discover: '#8C7AC4',
+    plan:     '#6B8DBF',
+    impl:     '#5DA88C',
+    test:     '#C8A35A',
+    review:   '#C77676',
+    deliver:  '#5BA3B0'
+  };
+
+  const NODES = {
+    USER: {
+      title: "User / Product Owner — Define Requirement",
+      phase: "User Input", color: "input",
+      input: [
+        "Pain point: 18% support ticket trong tháng là về refund",
+        "Nghiệp vụ thô từ Finance: refund 30 ngày, >5M cần approve",
+        "Ràng buộc compliance từ Legal"
+      ],
+      cli: null,
+      output: [
+        "Jira ticket <code>FT-204</code> với acceptance criteria",
+        "Stakeholder list · success metric (giảm 50% ticket refund)"
+      ]
+    },
+    ES: {
+      title: "Discoverer Agent — Event Storming",
+      phase: "Phase 0 · Discovery", color: "discover",
+      input: [
+        "Ticket FT-204 + acceptance criteria",
+        "Domain Expert: An (Finance Lead) + Linh (Customer Service Lead)",
+        "Glossary v3.2 hiện tại"
+      ],
+      cli: {
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:brainstorm Refund flow trong Billing context</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:brainstorming</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">docs/domain-experts.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">2 experts: An (Finance), Linh (Customer Service)</span>\n\n<span class="bullet">●</span> <span class="tool">Event Storming Session</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">RefundRequested · RefundApproved · RefundRejected</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">RefundCompleted · RefundFailed</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Commands: RequestRefund, ApproveRefund</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Policies: 30-day-window · manager-approval-&gt;5M</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">docs/events.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Wrote 12 events, 4 actors, 5 policies</span>\n\n<span class="status"><span class="star">✻</span> Done · 4.2s · 12 events captured</span>'
+      },
+      output: [
+        "<code>events.md</code> · sticky-board export",
+        "Danh sách Domain Events: <code>RefundRequested · RefundApproved · RefundCompleted · RefundFailed</code>",
+        "Commands &amp; Policies sơ bộ"
+      ]
+    },
+    DE: {
+      title: "Domain Expert — Validate Language",
+      phase: "Phase 0 · Discovery", color: "discover",
+      input: [
+        "<code>events.md</code> từ Event Storming",
+        "Glossary hiện tại"
+      ],
+      cli: {
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">Có chỗ nào team đang dùng "Refund" lẫn "Reversal" không?</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">docs/glossary.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Read 247 lines · v3.2</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">grep -rEi "refund|reversal" src/billing</span>)\n  <span class="arrow">⎿</span>  <span class="out">17 matches across 9 files</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">payment_service.py mixes both terms</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:brainstorming</span>)\n  <span class="arrow">⎿</span>  <span class="out">[An] Reversal = huỷ giao dịch chưa settle</span>\n  <span class="arrow">⎿</span>  <span class="out">[An] Refund = trả tiền sau settle — KHÁC NHAU</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Tách 2 thuật ngữ trong Ubiquitous Language</span>\n\n<span class="status"><span class="star">✻</span> Validated · 3 terms confirmed · 2 edge cases noted</span>'
+      },
+      output: [
+        "Quyết định ngôn ngữ: tách <code>Refund</code> vs <code>Reversal</code>",
+        "Validated terms: <code>RefundRequest</code>, <code>RefundPolicy</code>, <code>EligibilityWindow</code>",
+        "Edge case ghi nhận: partial refund, cross-currency refund"
+      ]
+    },
+    GL0: {
+      title: "Glossary v0 — Ubiquitous Language",
+      phase: "Phase 0 · Discovery", color: "discover",
+      input: [
+        "Validated terms từ Domain Expert",
+        "Existing glossary v3.2"
+      ],
+      cli: {
+        kind: "os", label: "OPENSPEC", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/openspec:propose Add refund terminology to Billing glossary</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">openspec/changes/add-refund-glossary/proposal.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Created proposal · 38 lines</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">openspec/changes/add-refund-glossary/design.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Term definitions + edge cases</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">specs/billing/glossary.md</span>) <span class="arg">[delta]</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">RefundRequest · EligibilityWindow</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">ManagerApprovalThreshold · PartialRefund</span>\n\n<span class="status"><span class="star">✻</span> Proposal ready · 4 terms · awaiting review</span>'
+      },
+      output: [
+        "<code>openspec/changes/add-refund-glossary/</code> proposal",
+        "Glossary delta cho context Billing",
+        "PR sẽ được merge vào main glossary sau Discovery"
+      ]
+    },
+    CM: {
+      title: "Context Map — Bounded Contexts",
+      phase: "Phase 0 · Discovery", color: "discover",
+      input: [
+        "Domain events đã có owner",
+        "Existing context-map.yaml"
+      ],
+      cli: {
+        kind: "os", label: "OPENSPEC", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/openspec:propose Update context map for refund flow</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">openspec/specs/context-map.yaml</span>)\n  <span class="arrow">⎿</span>  <span class="out">Read 84 lines · 6 contexts mapped</span>\n\n<span class="bullet">●</span> <span class="tool">Edit</span>(<span class="arg">openspec/changes/refund-context-map/delta.yaml</span>)\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Billing → Identity : <span class="key">Customer/Supplier</span> (via ACL)</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Billing → Notification : <span class="key">Conformist</span></span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">publishes: [RefundRequested, RefundCompleted, RefundFailed]</span>\n\n<span class="status"><span class="star">✻</span> Context map updated · 3 relationships</span>'
+      },
+      output: [
+        "<code>context-map.yaml</code> updated với 3 quan hệ",
+        "ACL spec giữa Billing ↔ Identity",
+        "Event subscription map cho Notification"
+      ]
+    },
+    PS: {
+      title: "Strategic Plan — Integration · ACL · SLA",
+      phase: "Phase 1 · Plan", color: "plan",
+      input: [
+        "Glossary v0 + Context Map",
+        "Domain events &amp; commands từ Discovery"
+      ],
+      cli: {
+        kind: "os", label: "OPENSPEC", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/openspec:propose FT-204 strategic integration plan</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">openspec/specs/context-map.yaml, glossary.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loaded discovery artifacts</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">changes/ft-204-refund-strategic/proposal.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Why · What · Impact</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">changes/ft-204-refund-strategic/design.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">ACL: BillingCustomerAdapter</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Event topic: billing.refund.v1 · SLA &lt; 24h</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Compensating action on Identity outage</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">adr/0042-notification-conformist.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">ADR captured</span>\n\n<span class="status"><span class="star">✻</span> Strategic plan ready · 3 artifacts · 1 ADR</span>'
+      },
+      output: [
+        "<code>changes/ft-204-refund-strategic/</code>",
+        "<code>adr/0042-notification-conformist.md</code>",
+        "Integration contract: Identity API endpoints cần thiết",
+        "Event topic: <code>billing.refund.v1</code>"
+      ]
+    },
+    PT: {
+      title: "Tactical Plan — Aggregates · Events · Repos",
+      phase: "Phase 1 · Plan", color: "plan",
+      input: [
+        "Strategic Plan đã chốt",
+        "Aggregate hiện tại trong Billing: <code>Order</code>, <code>Payment</code>"
+      ],
+      cli: {
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:writing-plans FT-204 tactical implementation</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:writing-plans</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">changes/ft-204-refund-strategic/design.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loaded strategic plan + ADR-0042</span>\n\n<span class="bullet">●</span> <span class="tool">Aggregate Design</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out"><span class="key">RefundRequest</span> (NEW) — invariants:</span>\n  <span class="arrow">⎿</span>  <span class="out">  • amount &gt; 0 ∧ amount ≤ payment.amount</span>\n  <span class="arrow">⎿</span>  <span class="out">  • order.settledAt ≤ 30 days</span>\n  <span class="arrow">⎿</span>  <span class="out">  state: Pending → Approved/Rejected → Completed/Failed</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">plan.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">12 tasks · est 13 SP</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">plan-review-gate</span>)\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">Generated review-checklist.md</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">Status: PENDING — awaiting human OK</span>\n\n<span class="status"><span class="star">✻</span> Plan saved · gate <span style="color:#E5B257">PENDING</span> · cannot execute yet</span>',
+        note: "<b>plan-review-gate</b> chặn không cho execute cho tới khi developer tick checklist và đặt <code>Overall Decision: OK</code> trong file review."
+      },
+      output: [
+        "<code>plan.md</code> chi tiết với 12 task",
+        "Aggregate design: <code>RefundRequest</code> với invariants",
+        "<code>tasks.md</code> trong OpenSpec change",
+        "<b>Gate:</b> chờ <code>plan-review-gate</code> approve"
+      ]
+    },
+    DEV: {
+      title: "Developer Agent — Layered Code",
+      phase: "Phase 2 · Implementation", color: "impl",
+      input: [
+        "<code>plan.md</code> đã APPROVED qua plan-review-gate",
+        "Tactical design + glossary"
+      ],
+      cli: {
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:executing-plans plan.md</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:executing-plans</span>)\n  <span class="arrow">⎿</span>  <span class="out">Verified review-checklist OK · gate passed</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">plan.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">12 tasks loaded · starting task 1/12</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:test-driven-development</span>)\n  <span class="arrow">⎿</span>  <span class="err">RED</span>   <span class="out">write failing test: amount &gt; payment.amount</span>\n  <span class="arrow">⎿</span>  <span class="ok">GREEN</span> <span class="out">implement RefundRequest aggregate</span>\n  <span class="arrow">⎿</span>  <span class="key">REFACTOR</span> <span class="out">extract value object Money</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">src/billing/domain/refund_request.py</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">94 lines · invariants enforced</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">tests/billing/domain/test_refund_request.py</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">12 tests · all green</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-apply</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Marked task 1/12 done in tasks.md</span>\n\n<span class="status"><span class="star">✻</span> Task 1/12 complete · 11 remaining</span>',
+        note: "Có thể dùng <code>subagent-driven-development</code> cho các task song song không phụ thuộc."
+      },
+      output: [
+        "<code>src/billing/domain/refund_request.py</code>",
+        "<code>src/billing/application/refund_service.py</code>",
+        "<code>src/billing/infrastructure/refund_repo.py</code>",
+        "<code>src/billing/interface/refund_api.py</code>",
+        "Tasks 1→12 marked done trong <code>tasks.md</code>"
+      ]
+    },
+    LINT: {
+      title: "Architecture + Glossary Linter",
+      phase: "Phase 2 · Implementation", color: "impl",
+      input: [
+        "Source code mới sinh",
+        "<code>arch-rules.yaml</code> + <code>glossary.md</code>"
+      ],
+      cli: {
+        kind: "sp", label: "PRE-COMMIT HOOK", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">git commit -m "feat(billing): add refund aggregate"</span>\n\n<span class="bullet">●</span> <span class="tool">Hook</span>(<span class="arg">PreToolUse · pre-commit</span>)\n  <span class="arrow">⎿</span>  <span class="out">Running .claude/hooks/lint-arch-glossary.sh</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">npm run lint:arch</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">domain/ ↛ infrastructure/</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">ACL used when calling Identity</span>\n  <span class="arrow">⎿</span>  <span class="err">✗</span> <span class="out">refund_api.py:42 calls IdentityClient directly</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">suggest: use CustomerAdapter (ACL)</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">npm run lint:glossary</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">RefundRequest, EligibilityWindow OK</span>\n  <span class="arrow">⎿</span>  <span class="err">✗</span> <span class="out">refund_service.py:18 — "cancel_refund"</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">glossary term: "reject_refund"</span>\n\n<span class="status" style="color:#E36471"><span class="star" style="color:#E36471">✗</span> FAIL · 2 violations · commit blocked</span>',
+        note: "Hook fail → fix tại chỗ rồi commit lại; không bypass <code>--no-verify</code>."
+      },
+      output: [
+        "<code>arch-lint-report.json</code>",
+        "<code>glossary-drift.json</code>",
+        "Pre-commit hook fail → dev fix trước khi push"
+      ]
+    },
+    SBE: {
+      title: "Specification by Example (BDD)",
+      phase: "Phase 3 · Test", color: "test",
+      input: [
+        "Glossary v3.2 + ngôn ngữ aggregate",
+        "Acceptance criteria từ FT-204"
+      ],
+      cli: {
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:test-driven-development Refund BDD specs</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:test-driven-development</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">docs/glossary.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loaded Ubiquitous Language</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">features/billing/refund.feature</span>)\n  <span class="arrow">⎿</span>  <span class="out">Feature: <span class="key">Refund Request</span></span>\n  <span class="arrow">⎿</span>  <span class="out">  Scenario: Customer requests refund within window</span>\n  <span class="arrow">⎿</span>  <span class="out">    Given an Order settled 10 days ago</span>\n  <span class="arrow">⎿</span>  <span class="out">    When the Customer requests a Refund of 2,000,000 VND</span>\n  <span class="arrow">⎿</span>  <span class="out">    Then a RefundRequest is created in <span class="key">Pending</span> state</span>\n  <span class="arrow">⎿</span>  <span class="out">    And event <span class="key">RefundRequested</span> is published</span>\n\n  <span class="arrow">⎿</span>  <span class="out">  Scenario: Refund above threshold needs Manager Approval</span>\n  <span class="arrow">⎿</span>  <span class="out">    When the Customer requests a Refund of 8,000,000 VND</span>\n  <span class="arrow">⎿</span>  <span class="out">    Then the state is <span class="key">PendingApproval</span></span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">features/steps/refund_steps.py</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">9 step definitions</span>\n\n<span class="status"><span class="star">✻</span> 5 scenarios · 9 steps · using glossary terms only</span>'
+      },
+      output: [
+        "<code>features/billing/refund.feature</code>",
+        "Step definitions skeleton",
+        "Tests viết bằng đúng glossary terms"
+      ]
+    },
+    UIT: {
+      title: "Unit · Integration · E2E Tests",
+      phase: "Phase 3 · Test", color: "test",
+      input: [
+        "Source code + feature files",
+        "Test fixtures &amp; sandbox env"
+      ],
+      cli: {
+        kind: "sp", label: "TEST RUNNER", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">npm run test:all</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">jest --coverage</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">unit · domain/refund_request.py     34 passed</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">unit · application/refund_service.py 18 passed</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">integration · repo + db             12 passed</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">behave features/</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">bdd · refund.feature                 9 passed</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">playwright test e2e/</span>)\n  <span class="arrow">⎿</span>  <span class="err">✗</span> <span class="out">e2e · checkout → refund flow      1 FAILED</span>\n  <span class="arrow">⎿</span>  <span class="err">  ✗</span> <span class="out">partial refund: amount mismatch in event payload</span>\n\n<span class="bullet">●</span> <span class="tool">Coverage</span>\n  <span class="arrow">⎿</span>  <span class="out">RefundRequest: <span class="ok">96%</span> · Payment: <span class="ok">88%</span> · Order: <span class="ok">91%</span></span>\n\n<span class="status" style="color:#E36471"><span class="star" style="color:#E36471">✗</span> 73 passed · 1 failed · loop back to Developer</span>',
+        note: "Test fail → loop arrow <b>3 → 2</b>: dev fix payload mapping rồi re-run."
+      },
+      output: [
+        "<code>coverage-by-aggregate.json</code>",
+        "<code>test-results.junit.xml</code>",
+        "Loop arrow <b>Tests Fail → Re-test</b> kích hoạt nếu fail"
+      ]
+    },
+    CT: {
+      title: "Contract Test giữa Bounded Contexts",
+      phase: "Phase 3 · Test", color: "test",
+      input: [
+        "Event schemas: <code>RefundRequested</code>, <code>RefundCompleted</code>",
+        "Consumer expectations từ Notification context"
+      ],
+      cli: {
+        kind: "sp", label: "PACT", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">npm run test:contract</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">pact verify --provider Billing</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading pacts from broker…</span>\n\n<span class="bullet">●</span> <span class="tool">Contract</span>(<span class="arg">Billing → Notification</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">RefundCompleted: required fields match</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">RefundFailed: required fields match</span>\n\n<span class="bullet">●</span> <span class="tool">Contract</span>(<span class="arg">Billing → Identity (ACL adapter)</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">CustomerVerified response shape OK</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">pacts/billing-*.json</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">3 contracts published to broker</span>\n\n<span class="status"><span class="star">✻</span> All contracts compatible · safe to deploy</span>'
+      },
+      output: [
+        "<code>pacts/billing-notification.json</code>",
+        "<code>pacts/billing-identity.json</code>",
+        "Đảm bảo deploy không làm vỡ context khác"
+      ]
+    },
+    CR: {
+      title: "Code Reviewer — Quality &amp; Security",
+      phase: "Phase 4 · Review", color: "review",
+      input: [
+        "PR diff đầy đủ",
+        "Test results · coverage"
+      ],
+      cli: {
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:requesting-code-review PR #1287</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:requesting-code-review</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Task</span>(<span class="arg">subagent: superpowers:code-reviewer</span>)\n  <span class="arrow">⎿</span>  <span class="out">Spawned · running quality + security audit</span>\n\n<span class="bullet">●</span> <span class="tool">Findings</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">No SQL injection (prepared stmts everywhere)</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">refund_service.py:67 — race condition possible</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">suggest: optimistic lock on Payment.version</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">stripe_key hard-coded in test fixture</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">PII redaction in logs verified</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">review-report.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Posted as PR #1287 review comments</span>\n\n<span class="status"><span class="star">✻</span> 2 issues · 0 critical · fix before merge</span>'
+      },
+      output: [
+        "<code>review-report.md</code>",
+        "GitHub PR comments với line-level findings",
+        "Issues nhẹ → fix trước khi merge"
+      ]
+    },
+    DMR: {
+      title: "Domain Model Reviewer (DDD-specific)",
+      phase: "Phase 4 · Review", color: "review",
+      input: [
+        "PR diff + glossary + context map",
+        "Aggregate design từ Tactical Plan"
+      ],
+      cli: {
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:requesting-code-review --focus domain-model</span>\n\n<span class="bullet">●</span> <span class="tool">Task</span>(<span class="arg">subagent: domain-model-reviewer</span>)\n  <span class="arrow">⎿</span>  <span class="out">Reading glossary.md, context-map.yaml, PR diff…</span>\n\n<span class="bullet">●</span> <span class="tool">Aggregate Boundary</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">RefundRequest stands alone · no Order coupling</span>\n\n<span class="bullet">●</span> <span class="tool">ACL Integrity</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">refund_service.py:88 imports <span class="key">IdentityDTO</span> directly</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">suggest: introduce <span class="key">CustomerSummary</span> via Billing ACL</span>\n\n<span class="bullet">●</span> <span class="tool">Language Drift</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">0 terms outside Ubiquitous Language</span>\n\n<span class="bullet">●</span> <span class="tool">Model Health</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">Aggregate trending "anemic" — logic in service</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">move <span class="key">canApprove()</span> into RefundRequest</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">domain-model-health.json</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">2 concerns · 1 may trigger Loop F</span>\n\n<span class="status" style="color:#C084FC"><span class="star" style="color:#C084FC">✻</span> Decision: fix in place OR Loop F (4 → 1)</span>',
+        note: "<b>Loop F · Refactor toward Deeper Insight</b>: nếu mô hình sai bản chất → quay về Phase 1 chỉnh tactical design, không chỉ patch code."
+      },
+      output: [
+        "<code>domain-model-health.json</code>",
+        "<code>refactor-proposals/</code>",
+        "Quyết định: fix nhẹ tại chỗ HOẶC kích Loop F (4 → 1)"
+      ]
+    },
+    PR: {
+      title: "Commit + PR + Deploy",
+      phase: "Phase 5 · Delivery", color: "deliver",
+      input: [
+        "Code đã APPROVED bởi cả 2 reviewer",
+        "OpenSpec change đầy đủ"
+      ],
+      cli: {
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/commit-commands:commit-push-pr</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">commit-commands:commit-push-pr</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">git commit · git push · gh pr create</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out"><span class="str">feat(billing): add refund request aggregate (FT-204)</span></span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">PR <span class="key">#1287</span> opened · linked OpenSpec + ADR-0042</span>\n\n<span class="bullet">●</span> <span class="tool">CodeBuild</span>(<span class="arg">build &amp; push image</span>)\n  <span class="arrow">⎿</span>  <span class="out">docker build · pytest · pact verify</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">push ECR · <span class="key">billing:9c4f1a2</span> · scan: 0 critical</span>\n\n<span class="bullet">●</span> <span class="tool">CodePipeline</span>(<span class="arg">deploy staging</span>)\n  <span class="arrow">⎿</span>  <span class="out">register ECS task definition v47</span>\n  <span class="arrow">⎿</span>  <span class="out">rolling update ECS service · 2/2 tasks healthy</span>\n  <span class="arrow">⎿</span>  <span class="out">EventBridge rule: <span class="key">billing.refund.v1</span> active</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">smoke test on staging.billing.internal · OK</span>\n\n<span class="bullet">●</span> <span class="tool">Manual Approval Gate</span>\n  <span class="arrow">⎿</span>  <span class="warn">⏸</span>  <span class="out">awaiting prod approval from @an · SLO check passed</span>\n\n<span class="status"><span class="star">✻</span> PR #1287 staged on AWS · prod gate pending</span>'
+      },
+      output: [
+        "Commit conventional: <code>feat(billing): ...</code>",
+        "PR <code>#1287</code> với link OpenSpec + ADR",
+        "Deploy staging, chờ approval cho prod"
+      ]
+    },
+    SY: {
+      title: "Glossary / Context-Map / ADR Sync &amp; Archive",
+      phase: "Phase 5 · Delivery", color: "deliver",
+      input: [
+        "OpenSpec change đã merged",
+        "Glossary delta + ADR mới"
+      ],
+      cli: {
+        kind: "os", label: "OPENSPEC", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/openspec:archive ft-204-refund-strategic</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-archive-change</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">mv openspec/changes/ft-204-* openspec/archive/</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Change archived</span>\n\n<span class="bullet">●</span> <span class="tool">Edit</span>(<span class="arg">openspec/specs/billing/</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Specs delta applied</span>\n\n<span class="bullet">●</span> <span class="tool">Edit</span>(<span class="arg">docs/glossary.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">4 terms added · v3.2 → <span class="key">v3.3</span></span>\n\n<span class="bullet">●</span> <span class="tool">Edit</span>(<span class="arg">openspec/specs/context-map.yaml</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Billing publishes 4 events</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">npm run schema:publish billing.refund.v1</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Registered to schema registry</span>\n\n<span class="status"><span class="star">✻</span> Knowledge sync done · triggers Discovery on next sprint</span>'
+      },
+      output: [
+        "<code>openspec/specs/billing/</code> updated",
+        "<code>glossary.md</code> v3.3",
+        "<code>context-map.yaml</code> với refund integration",
+        "<code>schemas/events/billing.refund.v1.json</code>",
+        "Loop <b>Knowledge Sync → Discovery</b> kích hoạt"
+      ]
+    }
+  };
+
+  // ────────────── Plain-Vietnamese summary per node ──────────────
+  const PURPOSES = {
+    USER: "Product Owner viết yêu cầu thô (pain point, compliance constraint) thành ticket có acceptance criteria rõ — đầu vào của cả pipeline.",
+    ES:   "Cùng Domain Expert chạy <b>Event Storming</b> để tìm ra <b>events</b>, <b>commands</b>, <b>actors</b>, <b>policies</b> — biến yêu cầu mơ hồ thành domain model cụ thể.",
+    DE:   "Domain Expert validate từng thuật ngữ — tránh dùng cùng 1 từ cho 2 nghĩa khác (vd. <i>Refund</i> vs <i>Reversal</i>) trước khi đưa vào glossary.",
+    GL0:  "Chốt thuật ngữ thành <b>Ubiquitous Language</b> chính thức trong <code>glossary.md</code>. Cả team &amp; AI sau này phải dùng đúng những term này — không tự sinh từ mới.",
+    CM:   "Vẽ <b>Context Map</b>: 4 bounded context (Billing/Identity/Notification/…) tương tác với nhau bằng pattern gì — <b>ACL</b>, <b>Conformist</b>, <b>Customer/Supplier</b>, <b>Shared Kernel</b>.",
+    PS:   "<b>Strategic design</b>: chọn integration pattern giữa các context, SLA, fallback khi downstream service down. Mọi quyết định lớn ghi thành <b>ADR</b>.",
+    PT:   "<b>Tactical design</b>: Aggregate nào mới, invariants, Repository, Domain Service, event handler — sinh plan ~12 task. Cần human OK qua <b>plan-review-gate</b> mới được execute.",
+    DEV:  "Execute plan từng task, code theo layering DDD (<code>domain/application/infrastructure/interface</code>), bám TDD (<b>RED → GREEN → REFACTOR</b>). Task xong → tick trong <code>tasks.md</code>.",
+    LINT: "Pre-commit hook tự chạy. <b>Block commit</b> nếu code phá boundary (domain import infrastructure) hoặc dùng term ngoài glossary — bắt fix tại chỗ, không bypass.",
+    SBE:  "Viết <code>.feature</code> dạng <b>Given-When-Then</b> bằng đúng glossary terms — Domain Expert &amp; QA không biết code vẫn đọc và review được scenario.",
+    UIT:  "Chạy <b>unit + integration + E2E</b> test. Fail → pipeline auto loop ngược về Developer (3 → 2).",
+    CT:   "<b>Consumer-driven contract test</b> bằng Pact: đảm bảo event/API schema không phá Notification, Identity đang consume. Pass = safe to deploy.",
+    CR:   "Code Reviewer kiểm chất lượng kỹ thuật + security: race condition, secret leak, SQL injection, performance — như code review truyền thống.",
+    DMR:  "Reviewer thứ 2 chỉ kiểm <b>domain model health</b>: Aggregate có <b>anemic</b> không, <b>ACL leak</b>, <b>language drift</b>. Sai bản chất → kích <b>Loop F</b> quay về Plan, không patch code lấy lệ.",
+    PR:   "AI sinh conventional commit, push branch, mở PR đính kèm test plan + link OpenSpec change + ADR. CI build image &amp; push ECR; merge → CodePipeline auto-deploy ECS Fargate (staging) chờ manual approval cho prod.",
+    SY:   "Post-merge: move change từ <code>changes/</code> sang <code>archive/</code>, apply specs delta, bump glossary version, register event schema lên <b>Glue Schema Registry</b> với enforce BACKWARD compatibility — knowledge sync cho sprint sau."
+  };
+
+  // ────────────── Artifact icons (SVG by lang) ──────────────
+  const _svg = (path, color) => `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+  const _doc = `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>`;
+  const ARTIFACT_ICONS = {
+    markdown: _svg(_doc + '<path d="M9 14h6M9 18h4"/>', '#60A5FA'),
+    yaml:     _svg(_doc + '<path d="M8 13l2 2 2-2 2 2"/>', '#FBBF24'),
+    json:     _svg(_doc + '<path d="M9 13c0 2 -1.5 2 -1.5 3 s1.5 1 1.5 3 M15 13c0 2 1.5 2 1.5 3 s-1.5 1 -1.5 3"/>', '#A78BFA'),
+    python:   _svg('<path d="M12 3a4 4 0 0 1 4 4v3H8V7a4 4 0 0 1 4-4z"/><path d="M12 21a4 4 0 0 1-4-4v-3h8v3a4 4 0 0 1-4 4z"/>', '#5DA88C'),
+    gherkin:  _svg(_doc + '<path d="M9 13l2 2 4-4"/>', '#C8A35A'),
+    git:      _svg('<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M6 8v8M8 18h8a2 2 0 0 0 2-2v-2"/>', '#E89A4F'),
+    text:     _svg(_doc, '#A1A1AA'),
+    default:  _svg(_doc, '#A1A1AA')
+  };
+
+  // ────────────── Artifact content per node ──────────────
+  const ARTIFACTS = {
+    USER: [
+      { file: 'jira/FT-204.md', lang: 'markdown', body:
+`<span class="h"># FT-204 · Refund flow</span>
+
+<span class="h">## Story</span>
+Là Customer, tôi muốn yêu cầu hoàn tiền cho đơn đã thanh toán
+trong vòng 30 ngày, để xử lý các trường hợp đổi/trả hợp lệ.
+
+<span class="h">## Acceptance criteria</span>
+- Refund chỉ nhận khi order.settledAt &lt; 30 ngày
+- Refund &gt; 5,000,000 VND <span class="n">⇒</span> cần Manager approve
+- Khi Refund Completed: gửi email + Slack #finance
+- Refund failed: retry 3 lần, log audit trail
+
+<span class="h">## Success metric</span>
+Giảm 50% support ticket về refund (baseline 18%/tháng)` }
+    ],
+    ES: [
+      { file: 'docs/events.md', lang: 'markdown', body:
+`<span class="h"># Refund Domain Events — Billing context</span>
+
+<span class="h">## Events</span>
+<span class="k">RefundRequested</span>   { orderId, customerId, amount, reason, requestedAt }
+<span class="k">RefundApproved</span>    { refundId, approvedBy, approvedAt }
+<span class="k">RefundRejected</span>    { refundId, rejectedBy, reason }
+<span class="k">RefundCompleted</span>   { refundId, transactionId, completedAt }
+<span class="k">RefundFailed</span>      { refundId, errorCode, retryable }
+
+<span class="h">## Commands</span>
+<span class="k">RequestRefund</span>     actor: Customer
+<span class="k">ApproveRefund</span>     actor: Manager  guard: amount &gt; 5M
+
+<span class="h">## Policies</span>
+- <span class="n">EligibilityWindow</span>: order.settledAt within 30 days
+- <span class="n">ManagerApproval</span>: amount &gt; 5,000,000 VND
+- <span class="n">RetryOnFailure</span>: max 3 attempts, exponential backoff` }
+    ],
+    DE: [
+      { file: 'docs/glossary-decisions.md', lang: 'markdown', body:
+`<span class="h">## Refund vs Reversal — clarified by An (Finance Lead)</span>
+
+| Term     | Meaning                                       |
+|----------|-----------------------------------------------|
+| <span class="k">Refund</span>   | Trả tiền sau khi giao dịch đã <span class="n">settle</span>          |
+| <span class="k">Reversal</span> | Huỷ giao dịch chưa settle (cùng auth window) |
+
+<span class="ok">→</span> Tách 2 thuật ngữ trong glossary, KHÔNG dùng lẫn.
+
+<span class="h">## Edge cases ghi nhận</span>
+- <span class="n">PartialRefund</span>: refund 1 line item trong đơn nhiều item
+- <span class="n">CrossCurrencyRefund</span>: order USD, refund VND <span class="o">→</span> dùng FX rate tại thời điểm settle (không phải lúc refund)` }
+    ],
+    GL0: [
+      { file: 'specs/billing/glossary.md (delta)', lang: 'markdown', body:
+`<span class="h">## Refund (NEW · proposed by FT-204)</span>
+
+<span class="k">RefundRequest</span>
+  Yêu cầu hoàn tiền do Customer khởi tạo trên đơn đã settle.
+  States: <span class="n">Pending → Approved/Rejected → Completed/Failed</span>
+  Identifier: <span class="s">"refund-{ULID}"</span>
+
+<span class="k">EligibilityWindow</span>
+  Khoảng thời gian sau settle Customer được yêu cầu Refund.
+  Default: <span class="n">30 days</span>
+
+<span class="k">ManagerApprovalThreshold</span>
+  Ngưỡng tiền bắt buộc Manager approve.
+  Default: <span class="n">5,000,000 VND</span>
+
+<span class="k">PartialRefund</span>
+  Refund nhỏ hơn tổng giá trị order.
+  Constraint: amount &lt; payment.amount` }
+    ],
+    CM: [
+      { file: 'specs/context-map.yaml (delta)', lang: 'yaml', body:
+`<span class="k">contexts</span>:
+  <span class="k">Billing</span>:
+    <span class="k">publishes</span>:
+      - RefundRequested
+      - RefundApproved
+      - RefundCompleted
+      - RefundFailed
+
+<span class="k">relationships</span>:
+  - <span class="k">upstream</span>: Identity
+    <span class="k">downstream</span>: Billing
+    <span class="k">pattern</span>: <span class="n">Customer/Supplier</span>
+    <span class="k">integration</span>: <span class="n">ACL</span>
+    <span class="k">notes</span>: <span class="s">"Billing dùng BillingCustomerAdapter, không depend trực tiếp"</span>
+
+  - <span class="k">upstream</span>: Billing
+    <span class="k">downstream</span>: Notification
+    <span class="k">pattern</span>: <span class="n">Conformist</span>
+    <span class="k">integration</span>: <span class="n">EventBus</span>
+    <span class="k">topic</span>: <span class="s">"billing.refund.v1"</span>` }
+    ],
+    PS: [
+      { file: 'changes/ft-204-refund-strategic/design.md', lang: 'markdown', body:
+`<span class="h"># FT-204 · Strategic Design</span>
+
+<span class="h">## Integration patterns</span>
+- Billing → Identity     · <span class="n">Customer/Supplier via ACL</span>
+- Billing → Notification · <span class="n">Conformist via EventBus</span>
+  topic: <span class="s">billing.refund.v1</span>
+
+<span class="h">## SLA</span>
+- Refund processing: <span class="n">P95 &lt; 24h</span> end-to-end
+- Identity verify: timeout 2s · retry 3 lần (exp backoff)
+
+<span class="h">## Compensating action</span>
+Nếu Identity unreachable <span class="o">→</span> enqueue verification, không
+block refund creation. Refund vào state <span class="k">PendingVerification</span>,
+retry job xử lý sau.
+
+<span class="h">## ADRs</span>
+- ADR-0042: Notification = Conformist (giữ schema ổn định)` },
+      { file: 'adr/0042-notification-conformist.md', lang: 'markdown', body:
+`<span class="h"># ADR-0042 · Notification = Conformist (not Anti-Corruption)</span>
+
+<span class="h">## Status</span>
+Accepted · 2026-05-04
+
+<span class="h">## Context</span>
+Notification consume RefundCompleted, RefundFailed.
+Schema event do Billing định nghĩa &amp; sở hữu.
+
+<span class="h">## Decision</span>
+Notification giữ <span class="n">Conformist</span> với Billing schema.
+Không xây ACL ở phía Notification để tránh maintenance overhead.
+
+<span class="h">## Consequences</span>
++ Schema thay đổi <span class="o">→</span> Notification phải migrate
++ Versioning bắt buộc (<span class="s">billing.refund.v1</span>)` }
+    ],
+    PT: [
+      { file: 'plan.md', lang: 'markdown', body:
+`<span class="h"># FT-204 Tactical Implementation Plan</span>
+
+<span class="h">## Aggregate · RefundRequest (NEW)</span>
+  id: RefundId
+  orderId: OrderId
+  paymentId: PaymentId
+  amount: Money
+  reason: str
+  state: Pending | Approved | Rejected | Completed | Failed
+
+  <span class="c"># Invariants</span>
+  • amount &gt; 0
+  • amount ≤ payment.amount
+  • order.settledAt within 30 days
+
+<span class="h">## Tasks (12 · est 13 SP)</span>
+<span class="o">[ ]</span> 1. RefundRequest aggregate + invariants
+<span class="o">[ ]</span> 2. RefundRequestRepository (interface + Postgres impl)
+<span class="o">[ ]</span> 3. Domain Service: RefundEligibilityChecker
+<span class="o">[ ]</span> 4. Application Service: RefundService
+<span class="o">[ ]</span> 5. ACL: BillingCustomerAdapter (gọi Identity)
+<span class="o">[ ]</span> 6. Event Bus publisher (billing.refund.v1)
+<span class="o">[ ]</span> 7. REST API: POST /refunds, GET /refunds/{id}
+<span class="o">[ ]</span> 8. Manager approval flow
+<span class="o">[ ]</span> 9. Compensating action handler
+<span class="o">[ ]</span> 10. BDD scenarios
+<span class="o">[ ]</span> 11. Pact contracts (Notification, Identity)
+<span class="o">[ ]</span> 12. Observability (metrics + traces)` },
+      { file: 'review-checklist.md', lang: 'markdown', body:
+`<span class="h"># Plan Review Checklist · FT-204</span>
+
+<span class="h">## Variant</span> BE Feature
+
+<span class="h">## Checklist</span>
+- [x] Aggregate boundary đúng
+- [x] Invariants đầy đủ
+- [x] Domain events có định nghĩa schema
+- [ ] Cross-context dependency được ACL bọc
+- [ ] Compensating action cho mỗi external call
+- [x] Test plan bao gồm contract test
+
+<span class="h">## Overall Decision</span>
+<span class="er">PENDING</span>   <span class="c"># developer phải đổi thành "OK" để execute</span>` }
+    ],
+    DEV: [
+      { file: 'src/billing/domain/refund_request.py', lang: 'python', body:
+`<span class="k">from</span> dataclasses <span class="k">import</span> dataclass
+<span class="k">from</span> datetime <span class="k">import</span> datetime, timedelta
+
+<span class="k">class</span> <span class="h">RefundRequest</span>:
+    <span class="k">@classmethod</span>
+    <span class="k">def</span> request(
+        cls, order: Order, payment: Payment,
+        amount: Money, reason: str
+    ) <span class="o">-&gt;</span> <span class="s">"RefundRequest"</span>:
+        <span class="c"># Invariant 1: amount &gt; 0</span>
+        <span class="k">if</span> amount &lt;= Money.zero():
+            <span class="k">raise</span> InvalidRefundAmount(<span class="s">"Must be positive"</span>)
+
+        <span class="c"># Invariant 2: amount &lt;= payment.amount</span>
+        <span class="k">if</span> amount &gt; payment.amount:
+            <span class="k">raise</span> InvalidRefundAmount(<span class="s">"Exceeds paid amount"</span>)
+
+        <span class="c"># Invariant 3: order.settledAt within 30 days</span>
+        deadline = order.settled_at + timedelta(days=<span class="n">30</span>)
+        <span class="k">if</span> datetime.utcnow() &gt; deadline:
+            <span class="k">raise</span> OutsideEligibilityWindow()
+
+        instance = cls(
+            id=RefundId.new(),
+            order_id=order.id,
+            payment_id=payment.id,
+            amount=amount,
+            reason=reason,
+            state=State.PENDING,
+        )
+        instance._record(RefundRequested(...))
+        <span class="k">return</span> instance` }
+    ],
+    LINT: [
+      { file: 'arch-lint-report.json', lang: 'json', body:
+`{
+  <span class="k">"violations"</span>: [
+    {
+      <span class="k">"file"</span>: <span class="s">"src/billing/interface/refund_api.py"</span>,
+      <span class="k">"line"</span>: <span class="n">42</span>,
+      <span class="k">"rule"</span>: <span class="s">"no-direct-cross-context-import"</span>,
+      <span class="k">"message"</span>: <span class="s">"Imports IdentityClient directly; should use BillingCustomerAdapter (ACL)"</span>,
+      <span class="k">"severity"</span>: <span class="er">"error"</span>
+    },
+    {
+      <span class="k">"file"</span>: <span class="s">"src/billing/application/refund_service.py"</span>,
+      <span class="k">"line"</span>: <span class="n">18</span>,
+      <span class="k">"rule"</span>: <span class="s">"ubiquitous-language"</span>,
+      <span class="k">"message"</span>: <span class="s">"'cancel_refund' not in glossary; suggest 'reject_refund'"</span>,
+      <span class="k">"severity"</span>: <span class="er">"error"</span>
+    }
+  ],
+  <span class="k">"summary"</span>: { <span class="k">"error"</span>: <span class="n">2</span>, <span class="k">"warn"</span>: <span class="n">0</span> }
+}` }
+    ],
+    SBE: [
+      { file: 'features/billing/refund.feature', lang: 'gherkin', body:
+`<span class="h">Feature</span>: Refund Request
+
+  <span class="k">Scenario</span>: Customer requests refund within window
+    <span class="k">Given</span> an Order settled <span class="n">10</span> days ago
+    <span class="k">And</span> a Payment of <span class="n">2,000,000</span> VND
+    <span class="k">When</span> the Customer requests a Refund of <span class="n">2,000,000</span> VND
+    <span class="k">Then</span> a RefundRequest is created in <span class="ok">Pending</span> state
+    <span class="k">And</span> event <span class="ok">RefundRequested</span> is published
+
+  <span class="k">Scenario</span>: Refund above threshold needs Manager Approval
+    <span class="k">Given</span> a Payment of <span class="n">8,000,000</span> VND
+    <span class="k">When</span> the Customer requests a Refund of <span class="n">8,000,000</span> VND
+    <span class="k">Then</span> the RefundRequest is in <span class="n">PendingApproval</span> state
+    <span class="k">And</span> event <span class="ok">RefundApprovalRequired</span> is published
+
+  <span class="k">Scenario</span>: Refund outside eligibility window is rejected
+    <span class="k">Given</span> an Order settled <span class="n">45</span> days ago
+    <span class="k">When</span> the Customer requests a Refund
+    <span class="k">Then</span> the request is rejected with <span class="er">OutsideEligibilityWindow</span>` }
+    ],
+    UIT: [
+      { file: 'test-results.summary.txt', lang: 'text', body:
+`<span class="ok">PASS</span> tests/billing/domain/test_refund_request.py    34 passed
+<span class="ok">PASS</span> tests/billing/application/test_refund_service.py  18 passed
+<span class="ok">PASS</span> tests/billing/integration/test_repo.py            12 passed
+<span class="ok">PASS</span> features/billing/refund.feature                    9 passed
+<span class="er">FAIL</span> e2e/checkout-refund.spec.ts
+
+  <span class="er">✗</span> partial refund: amount mismatch in event payload
+
+    Expected: { amount: <span class="n">1500000</span> }
+    Received: { amount: <span class="n">150000000</span> }   <span class="c"># off by 100x — unit conversion bug</span>
+
+    at refund_service.py:<span class="n">112</span>
+    at e2e/checkout-refund.spec.ts:<span class="n">87</span>
+
+<span class="h">────── Coverage by aggregate ──────</span>
+RefundRequest   stmts <span class="ok">96%</span>   branch <span class="ok">91%</span>   func <span class="ok">100%</span>
+Payment         stmts <span class="ok">88%</span>   branch <span class="n">84%</span>   func <span class="ok">92%</span>
+Order           stmts <span class="ok">91%</span>   branch <span class="ok">88%</span>   func <span class="ok">95%</span>
+
+73 passed · <span class="er">1 failed</span> · loop back to Developer (3 → 2)` }
+    ],
+    CT: [
+      { file: 'pacts/billing-notification.json', lang: 'json', body:
+`{
+  <span class="k">"consumer"</span>: <span class="s">"Notification"</span>,
+  <span class="k">"provider"</span>: <span class="s">"Billing"</span>,
+  <span class="k">"interactions"</span>: [
+    {
+      <span class="k">"description"</span>: <span class="s">"RefundCompleted event"</span>,
+      <span class="k">"request"</span>: {
+        <span class="k">"topic"</span>: <span class="s">"billing.refund.v1"</span>,
+        <span class="k">"type"</span>: <span class="s">"RefundCompleted"</span>
+      },
+      <span class="k">"matchingRules"</span>: {
+        <span class="s">"$.refundId"</span>:    { <span class="k">"match"</span>: <span class="s">"type"</span> },
+        <span class="s">"$.amount"</span>:      { <span class="k">"match"</span>: <span class="s">"type"</span> },
+        <span class="s">"$.completedAt"</span>: { <span class="k">"match"</span>: <span class="s">"iso8601"</span> }
+      }
+    }
+  ],
+  <span class="k">"verifiedAt"</span>: <span class="s">"2026-05-04T08:30:00Z"</span>,
+  <span class="k">"status"</span>: <span class="ok">"compatible"</span>
+}` }
+    ],
+    CR: [
+      { file: 'review-report.md', lang: 'markdown', body:
+`<span class="h"># Code Review · PR #1287</span>
+
+<span class="h">## ⚠ refund_service.py:67 — Race condition</span>
+<span class="c">def process_refund(refund_id):
+    refund = repo.get(refund_id)
+    payment = payment_repo.get(refund.payment_id)
+    payment.deduct(refund.amount)   # ← no version check
+    payment_repo.save(payment)</span>
+
+<span class="ok">Suggest</span>: optimistic lock on <span class="n">Payment.version</span>
+<span class="c">payment_repo.save(payment, expected_version=payment.version)</span>
+
+<span class="h">## ⚠ Hard-coded secret in test fixture</span>
+<span class="er">tests/billing/fixtures/payments.py:12</span>
+<span class="c">STRIPE_KEY = "sk_test_&lt;redacted-demo-value&gt;"</span>
+<span class="ok">Suggest</span>: move to env / .env.test, add to .gitignore
+
+<span class="h">## ✓ Verified</span>
+- No SQL injection (prepared statements throughout)
+- PII redaction in logs (customer email, card last4)
+
+<span class="h">## Summary</span>
+<span class="n">2 issues</span> · <span class="ok">0 critical</span> · fix before merge` }
+    ],
+    DMR: [
+      { file: 'domain-model-health.json', lang: 'json', body:
+`{
+  <span class="k">"aggregateBoundary"</span>: { <span class="k">"status"</span>: <span class="ok">"ok"</span> },
+
+  <span class="k">"aclIntegrity"</span>: {
+    <span class="k">"status"</span>: <span class="n">"warn"</span>,
+    <span class="k">"leaks"</span>: [
+      {
+        <span class="k">"file"</span>: <span class="s">"src/billing/application/refund_service.py"</span>,
+        <span class="k">"line"</span>: <span class="n">88</span>,
+        <span class="k">"from"</span>: <span class="s">"billing"</span>,
+        <span class="k">"to"</span>: <span class="s">"identity"</span>,
+        <span class="k">"import"</span>: <span class="s">"IdentityDTO"</span>,
+        <span class="k">"suggest"</span>: <span class="s">"Define CustomerSummary in billing/domain via BillingCustomerAdapter"</span>
+      }
+    ]
+  },
+
+  <span class="k">"languageDrift"</span>: {
+    <span class="k">"termsOutsideGlossary"</span>: []
+  },
+
+  <span class="k">"modelHealth"</span>: {
+    <span class="k">"anemicAggregateRisk"</span>: {
+      <span class="k">"status"</span>: <span class="n">"warn"</span>,
+      <span class="k">"aggregate"</span>: <span class="s">"RefundRequest"</span>,
+      <span class="k">"logicLocation"</span>: <span class="s">"application.refund_service.can_approve"</span>,
+      <span class="k">"suggest"</span>: <span class="s">"Move can_approve() into RefundRequest aggregate"</span>
+    }
+  },
+
+  <span class="k">"loopFCandidate"</span>: <span class="er">false</span>,
+  <span class="k">"verdict"</span>: <span class="s">"fix-in-place"</span>
+}` }
+    ],
+    PR: [
+      { file: 'services/billing/infra/billing-stack.ts', lang: 'text', body:
+`<span class="c">// AWS CDK · Billing service stack</span>
+<span class="k">export class</span> <span class="h">BillingStack</span> <span class="k">extends</span> Stack {
+  <span class="k">constructor</span>(scope: Construct, id: string, props: StackProps) {
+    <span class="k">super</span>(scope, id, props);
+
+    <span class="c">// 1. Container image from ECR</span>
+    <span class="k">const</span> image = ContainerImage.fromEcrRepository(repo, gitSha);
+
+    <span class="c">// 2. Aurora Postgres (Multi-AZ)</span>
+    <span class="k">const</span> db = <span class="k">new</span> DatabaseCluster(<span class="k">this</span>, <span class="s">"BillingDB"</span>, {
+      engine: DatabaseClusterEngine.<span class="n">AURORA_POSTGRESQL</span>,
+      writer: ClusterInstance.serverlessV2(<span class="s">"writer"</span>),
+      readers: [ClusterInstance.serverlessV2(<span class="s">"reader"</span>)],
+      iamAuthentication: <span class="ok">true</span>,
+    });
+
+    <span class="c">// 3. ECS Fargate service behind ALB</span>
+    <span class="k">const</span> svc = <span class="k">new</span> ApplicationLoadBalancedFargateService(<span class="k">this</span>, <span class="s">"BillingSvc"</span>, {
+      cluster, taskImageOptions: { image, environment: { DB_HOST: db.endpoint } },
+      desiredCount: <span class="n">2</span>,
+      cpu: <span class="n">512</span>, memoryLimitMiB: <span class="n">1024</span>,
+    });
+    svc.service.autoScaleTaskCount({ minCapacity: <span class="n">2</span>, maxCapacity: <span class="n">10</span> });
+
+    <span class="c">// 4. EventBridge — publish refund events</span>
+    <span class="k">const</span> bus = EventBus.fromEventBusName(<span class="k">this</span>, <span class="s">"AppBus"</span>, <span class="s">"app-events"</span>);
+    bus.grantPutEventsTo(svc.taskDefinition.taskRole);
+
+    <span class="c">// 5. SQS DLQ + alarm</span>
+    <span class="k">new</span> Alarm(<span class="k">this</span>, <span class="s">"DlqAlarm"</span>, { metric: dlq.metricApproximateNumberOfMessagesVisible(), threshold: <span class="n">1</span> });
+
+    <span class="c">// 6. Glue Schema Registry — register event schema</span>
+    <span class="k">new</span> CfnSchema(<span class="k">this</span>, <span class="s">"RefundSchema"</span>, {
+      registryName: <span class="s">"billing"</span>, name: <span class="s">"refund.v1"</span>,
+      compatibility: <span class="n">"BACKWARD"</span>, dataFormat: <span class="s">"JSON"</span>,
+      schemaDefinition: readFileSync(<span class="s">"schemas/refund.v1.json"</span>, <span class="s">"utf8"</span>),
+    });
+  }
+}</span>` },
+      { file: 'commit message', lang: 'git', body:
+`<span class="h">feat(billing): add refund request aggregate (FT-204)</span>
+
+Implement RefundRequest aggregate with invariants for refund
+eligibility, threshold-based manager approval, and event
+publication for downstream contexts.
+
+- domain: RefundRequest aggregate, value objects, domain events
+- application: RefundService orchestrating refund lifecycle
+- infrastructure: PostgreSQL repository, EventBus publisher
+- ACL: BillingCustomerAdapter for Identity integration
+
+Closes <span class="n">FT-204</span>
+Refs <span class="n">ADR-0042</span>` },
+      { file: 'gh pr create — body', lang: 'markdown', body:
+`<span class="h">## Summary</span>
+- New <span class="k">RefundRequest</span> aggregate in Billing context
+- Refund flow with manager approval &gt; 5M VND threshold
+- Event publishing on state transitions (4 events)
+- BillingCustomerAdapter (ACL) for Identity integration
+
+<span class="h">## Test plan</span>
+- [x] Unit + integration green (64 tests)
+- [x] BDD scenarios pass (refund.feature)
+- [x] Pact contracts verified · Notification, Identity
+- [x] Coverage RefundRequest <span class="ok">96%</span>
+- [ ] Manual smoke on staging
+
+<span class="h">## Linked</span>
+- OpenSpec: <span class="s">openspec/changes/ft-204-refund-strategic/</span>
+- ADR: <span class="s">adr/0042-notification-conformist.md</span>
+- Glossary delta: <span class="s">specs/billing/glossary.md</span>
+
+<span class="h">## Reviewers</span>
+@an (context owner) · @qa-bot · @domain-model-reviewer` }
+    ],
+    SY: [
+      { file: 'archive/2026-05-04-ft-204-refund/MIGRATION.md', lang: 'markdown', body:
+`<span class="h"># Archived · FT-204 Refund</span>
+
+<span class="h">## Applied</span>
+- Glossary <span class="n">v3.2 → v3.3</span> · 4 new terms
+  RefundRequest · EligibilityWindow · ManagerApprovalThreshold · PartialRefund
+- context-map.yaml · +3 relationships (Billing↔Identity, Billing↔Notification)
+- specs/billing/refund/ · added (5 specs)
+- ADR-0042 · published
+
+<span class="h">## Event schema registered</span>
+<span class="s">billing.refund.v1</span> <span class="o">→</span> registry.internal/billing/refund/v1
+  Subscribers: Notification (Conformist)
+
+<span class="h">## Knowledge sync</span>
+Trigger Discovery refresh on next sprint (loop 5 → 0).
+Recent changes feed: glossary v3.3, context map v12.
+
+<span class="ok">✓</span> Archive complete · all artifacts versioned in git` }
+    ]
+  };
+
+  // ────────────── Render modal ──────────────
+  function openNode(id) {
+    const n = NODES[id];
+    if (!n) return;
+    document.getElementById('mTitle').textContent = n.title;
+    document.getElementById('mPhase').textContent = n.phase;
+    document.getElementById('mDot').style.background = COLORS[n.color] || '#888';
+
+    let html = '';
+
+    if (PURPOSES[id]) {
+      html += `<div class="purpose">
+        <div class="purpose-h"><span class="ico">i</span>Node này làm gì?</div>
+        <div class="purpose-body">${PURPOSES[id]}</div>
+      </div>`;
+    }
+
+    if (n.input?.length) {
+      html += `<div class="sec">
+        <div class="sec-h in"><span class="icn">▸</span>Input</div>
+        <ul class="list">${n.input.map(x => `<li>${x}</li>`).join('')}</ul>
+      </div>`;
+    }
+
+    if (n.cli) {
+      const labClass = n.cli.kind === 'os' ? '' : 'sp';
+      const cwd = n.cli.cwd || '~/billing-service';
+      const welcome = `<span class="welcome">╭───────────────────────────────────────────────╮
+│ <span class="star">✻</span> Welcome to <b>Claude Code</b>!                    │
+│                                                 │
+│   <span class="dim">/help for help · /status</span>                       │
+│   <span class="dim">cwd:</span> <span class="cwd">${cwd}</span>${' '.repeat(Math.max(0, 40 - cwd.length))}│
+╰───────────────────────────────────────────────╯</span>\n\n`;
+      html += `<div class="sec">
+        <div class="sec-h cli"><span class="icn">$</span>AI Activity · Claude Code CLI</div>
+        <div class="term">
+          <div class="term-bar">
+            <span class="tdots"><i></i><i></i><i></i></span>
+            claude-code — ${cwd}
+            <span class="lab ${labClass}">${n.cli.label}</span>
+          </div>
+          <pre>${welcome}${n.cli.cmd}</pre>
+        </div>
+        ${n.cli.note ? `<div class="note">${n.cli.note}</div>` : ''}
+      </div>`;
+    } else {
+      html += `<div class="sec">
+        <div class="sec-h cli"><span class="icn">$</span>AI Activity</div>
+        <div class="note">Bước này chủ yếu thủ công — PO định nghĩa yêu cầu, không có AI tham gia.</div>
+      </div>`;
+    }
+
+    if (n.output?.length || ARTIFACTS[id]?.length) {
+      let outHtml = '';
+      if (n.output?.length) {
+        outHtml += `<ul class="list">${n.output.map(x => `<li>${x}</li>`).join('')}</ul>`;
+      }
+      if (ARTIFACTS[id]?.length) {
+        outHtml += ARTIFACTS[id].map(a => {
+          const icon = ARTIFACT_ICONS[a.lang] || ARTIFACT_ICONS.default;
+          return `<div class="artifact">
+            <div class="artifact-head">
+              <span class="ico">${icon}</span>
+              <span class="file">${a.file}</span>
+              <span class="lang">${a.lang}</span>
+            </div>
+            <pre>${a.body}</pre>
+          </div>`;
+        }).join('');
+      }
+      html += `<div class="sec">
+        <div class="sec-h out"><span class="icn">▾</span>Output / Artifacts</div>
+        ${outHtml}
+      </div>`;
+    }
+
+    document.getElementById('mBody').innerHTML = html;
+    document.getElementById('overlay').classList.add('is-open');
+  }
+
+  function closeNode() {
+    document.getElementById('overlay').classList.remove('is-open');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeNode();
+  });
+
+  // Tab switcher for project structure card
+  function switchPane(btn, pane) {
+    document.querySelectorAll('.struct-tab').forEach(b => b.classList.remove('is-active'));
+    document.querySelectorAll('.struct-pane').forEach(p => p.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    document.getElementById('pane-' + pane).classList.add('is-active');
+  }
+
+  // Expose for mermaid click handlers
+  window.openNode = openNode;
+  window.closeNode = closeNode;
+  window.switchPane = switchPane;
+</script>
+
+</body>
+</html>
