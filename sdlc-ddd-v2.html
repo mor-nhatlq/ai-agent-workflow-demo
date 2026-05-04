@@ -708,10 +708,7 @@ flowchart TB
 
   subgraph P0["PHASE 0 · Domain Discovery (A)"]
     direction TB
-    ES["Discoverer Agent<br/>Event Storming"]:::discover
-    DE["Domain Expert<br/>Validate Language"]:::discover
-    GL0["Glossary v0<br/>Refund terms"]:::discover
-    CM["Context Map<br/>Billing · Identity · Notification"]:::discover
+    DISC["Domain Discovery<br/>Event Storming → Glossary → Context Map"]:::discover
   end
 
   subgraph P1["PHASE 1 · Strategic + Tactical Plan (B)"]
@@ -745,11 +742,8 @@ flowchart TB
     SY["Glossary / ContextMap / ADR<br/>Sync and Archive"]:::deliver
   end
 
-  USER -->|"Yêu cầu"| ES
-  ES --> DE
-  DE --> GL0
-  GL0 --> CM
-  CM -->|"Domain Model v0"| PS
+  USER -->|"Yêu cầu"| DISC
+  DISC -->|"Domain Model v0"| PS
   PS --> PT
   PT -->|"Plan and Specs"| DEV
   DEV --> LINT
@@ -764,15 +758,12 @@ flowchart TB
   CT -.->|"Tests Fail · Re-test"| DEV
   DMR -.->|"Issues Found · Refactor"| DEV
   DMR -.->|"(F) Deeper Insight"| PS
-  SY -.->|"Knowledge Sync"| ES
+  SY -.->|"Knowledge Sync"| DISC
 
   class P0,P1,P2,P3,P4,P5 phase
 
   click USER call openNode("USER")
-  click ES call openNode("ES")
-  click DE call openNode("DE")
-  click GL0 call openNode("GL0")
-  click CM call openNode("CM")
+  click DISC call openNode("DISC")
   click PS call openNode("PS")
   click PT call openNode("PT")
   click DEV call openNode("DEV")
@@ -872,73 +863,25 @@ flowchart TB
         "Stakeholder list · success metric (giảm 50% ticket refund)"
       ]
     },
-    ES: {
-      title: "Discoverer Agent — Event Storming",
+    DISC: {
+      title: "Domain Discovery — Event Storming · Glossary · Context Map",
       phase: "Phase 0 · Discovery", color: "discover",
       input: [
         "Ticket FT-204 + acceptance criteria",
-        "Domain Expert: An (Finance Lead) + Linh (Customer Service Lead)",
-        "Glossary v3.2 hiện tại"
+        "Domain Expert: An (Finance Lead), Linh (Customer Service Lead)",
+        "Glossary v3.2 + <code>context-map.yaml</code> hiện tại"
       ],
       cli: {
-        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:brainstorm Refund flow trong Billing context</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:brainstorming</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">docs/domain-experts.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">2 experts: An (Finance), Linh (Customer Service)</span>\n\n<span class="bullet">●</span> <span class="tool">Event Storming Session</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">RefundRequested · RefundApproved · RefundRejected</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">RefundCompleted · RefundFailed</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Commands: RequestRefund, ApproveRefund</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Policies: 30-day-window · manager-approval-&gt;5M</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">docs/events.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Wrote 12 events, 4 actors, 5 policies</span>\n\n<span class="status"><span class="star">✻</span> Done · 4.2s · 12 events captured</span>'
+        kind: "sp", label: "SUPERPOWERS + OPENSPEC", cwd: "~/billing-service",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:brainstorm Domain discovery cho FT-204 (Refund flow)</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:brainstorming</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill · Domain Expert mode</span>\n\n<span class="bullet">●</span> <span class="tool">Event Storming Session</span> <span class="arg">(với An + Linh)</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Events: RefundRequested · RefundApproved · RefundRejected</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Events: RefundCompleted · RefundFailed</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Commands: RequestRefund · ApproveRefund</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Policies: 30-day-window · manager-approval-&gt;5M</span>\n\n<span class="bullet">●</span> <span class="tool">Language Validation</span> <span class="arg">(hỏi An)</span>\n  <span class="arrow">⎿</span>  <span class="out">[An] Reversal = huỷ giao dịch chưa settle</span>\n  <span class="arrow">⎿</span>  <span class="out">[An] Refund = trả tiền sau settle — KHÁC NHAU</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Tách 2 thuật ngữ trong Ubiquitous Language</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>) <span class="arg">— glossary delta</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Write specs/billing/glossary.md (4 new terms)</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">RefundRequest · EligibilityWindow</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">ManagerApprovalThreshold · PartialRefund</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>) <span class="arg">— context map delta</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Billing → Identity : <span class="key">Customer/Supplier</span> via ACL</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Billing → Notification : <span class="key">Conformist</span> via EventBus</span>\n\n<span class="status"><span class="star">✻</span> Discovery done · 12 events · 4 terms · 3 relationships · 2 edge cases noted</span>',
+        note: "Đây là 1 buổi Discovery duy nhất với Domain Expert — gộp Event Storming, validate ngôn ngữ, glossary và context map vào cùng session để giữ tính liền mạch."
       },
       output: [
-        "<code>events.md</code> · sticky-board export",
-        "Danh sách Domain Events: <code>RefundRequested · RefundApproved · RefundCompleted · RefundFailed</code>",
-        "Commands &amp; Policies sơ bộ"
-      ]
-    },
-    DE: {
-      title: "Domain Expert — Validate Language",
-      phase: "Phase 0 · Discovery", color: "discover",
-      input: [
-        "<code>events.md</code> từ Event Storming",
-        "Glossary hiện tại"
-      ],
-      cli: {
-        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">Có chỗ nào team đang dùng "Refund" lẫn "Reversal" không?</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">docs/glossary.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Read 247 lines · v3.2</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">grep -rEi "refund|reversal" src/billing</span>)\n  <span class="arrow">⎿</span>  <span class="out">17 matches across 9 files</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">payment_service.py mixes both terms</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:brainstorming</span>)\n  <span class="arrow">⎿</span>  <span class="out">[An] Reversal = huỷ giao dịch chưa settle</span>\n  <span class="arrow">⎿</span>  <span class="out">[An] Refund = trả tiền sau settle — KHÁC NHAU</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Tách 2 thuật ngữ trong Ubiquitous Language</span>\n\n<span class="status"><span class="star">✻</span> Validated · 3 terms confirmed · 2 edge cases noted</span>'
-      },
-      output: [
+        "<code>docs/events.md</code> · sticky-board export (12 events · 4 actors · 5 policies)",
+        "<code>specs/billing/glossary.md</code> delta · 4 term mới (Ubiquitous Language)",
+        "<code>specs/context-map.yaml</code> delta · 3 quan hệ giữa context",
         "Quyết định ngôn ngữ: tách <code>Refund</code> vs <code>Reversal</code>",
-        "Validated terms: <code>RefundRequest</code>, <code>RefundPolicy</code>, <code>EligibilityWindow</code>",
-        "Edge case ghi nhận: partial refund, cross-currency refund"
-      ]
-    },
-    GL0: {
-      title: "Glossary v0 — Ubiquitous Language",
-      phase: "Phase 0 · Discovery", color: "discover",
-      input: [
-        "Validated terms từ Domain Expert",
-        "Existing glossary v3.2"
-      ],
-      cli: {
-        kind: "os", label: "OPENSPEC", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/openspec:propose Add refund terminology to Billing glossary</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">openspec/changes/add-refund-glossary/proposal.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Created proposal · 38 lines</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">openspec/changes/add-refund-glossary/design.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Term definitions + edge cases</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">specs/billing/glossary.md</span>) <span class="arg">[delta]</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">RefundRequest · EligibilityWindow</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">ManagerApprovalThreshold · PartialRefund</span>\n\n<span class="status"><span class="star">✻</span> Proposal ready · 4 terms · awaiting review</span>'
-      },
-      output: [
-        "<code>openspec/changes/add-refund-glossary/</code> proposal",
-        "Glossary delta cho context Billing",
-        "PR sẽ được merge vào main glossary sau Discovery"
-      ]
-    },
-    CM: {
-      title: "Context Map — Bounded Contexts",
-      phase: "Phase 0 · Discovery", color: "discover",
-      input: [
-        "Domain events đã có owner",
-        "Existing context-map.yaml"
-      ],
-      cli: {
-        kind: "os", label: "OPENSPEC", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/openspec:propose Update context map for refund flow</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">openspec/specs/context-map.yaml</span>)\n  <span class="arrow">⎿</span>  <span class="out">Read 84 lines · 6 contexts mapped</span>\n\n<span class="bullet">●</span> <span class="tool">Edit</span>(<span class="arg">openspec/changes/refund-context-map/delta.yaml</span>)\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Billing → Identity : <span class="key">Customer/Supplier</span> (via ACL)</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Billing → Notification : <span class="key">Conformist</span></span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">publishes: [RefundRequested, RefundCompleted, RefundFailed]</span>\n\n<span class="status"><span class="star">✻</span> Context map updated · 3 relationships</span>'
-      },
-      output: [
-        "<code>context-map.yaml</code> updated với 3 quan hệ",
-        "ACL spec giữa Billing ↔ Identity",
-        "Event subscription map cho Notification"
+        "Edge cases ghi nhận: partial refund · cross-currency refund"
       ]
     },
     PS: {
@@ -1144,10 +1087,7 @@ flowchart TB
   // ────────────── Plain-Vietnamese summary per node ──────────────
   const PURPOSES = {
     USER: "Product Owner viết yêu cầu thô (pain point, compliance constraint) thành ticket có acceptance criteria rõ — đầu vào của cả pipeline.",
-    ES:   "Cùng Domain Expert chạy <b>Event Storming</b> để tìm ra <b>events</b>, <b>commands</b>, <b>actors</b>, <b>policies</b> — biến yêu cầu mơ hồ thành domain model cụ thể.",
-    DE:   "Domain Expert validate từng thuật ngữ — tránh dùng cùng 1 từ cho 2 nghĩa khác (vd. <i>Refund</i> vs <i>Reversal</i>) trước khi đưa vào glossary.",
-    GL0:  "Chốt thuật ngữ thành <b>Ubiquitous Language</b> chính thức trong <code>glossary.md</code>. Cả team &amp; AI sau này phải dùng đúng những term này — không tự sinh từ mới.",
-    CM:   "Vẽ <b>Context Map</b>: 4 bounded context (Billing/Identity/Notification/…) tương tác với nhau bằng pattern gì — <b>ACL</b>, <b>Conformist</b>, <b>Customer/Supplier</b>, <b>Shared Kernel</b>.",
+    DISC: "Một buổi <b>Domain Discovery</b> với Domain Expert: chạy <b>Event Storming</b> tìm events/commands/actors/policies, validate ngôn ngữ (vd. <i>Refund</i> vs <i>Reversal</i>), chốt <b>Ubiquitous Language</b> trong <code>glossary.md</code>, và vẽ <b>Context Map</b> (ACL · Conformist · Customer/Supplier) — biến yêu cầu mơ hồ thành domain model + ngôn ngữ chung cho cả team và AI.",
     PS:   "<b>Strategic design</b>: chọn integration pattern giữa các context, SLA, fallback khi downstream service down. Mọi quyết định lớn ghi thành <b>ADR</b>.",
     PT:   "<b>Tactical design</b>: Aggregate nào mới, invariants, Repository, Domain Service, event handler — sinh plan ~12 task. Cần human OK qua <b>plan-review-gate</b> mới được execute.",
     DEV:  "Execute plan từng task, code theo layering DDD (<code>domain/application/infrastructure/interface</code>), bám TDD (<b>RED → GREEN → REFACTOR</b>). Task xong → tick trong <code>tasks.md</code>.",
@@ -1194,7 +1134,7 @@ trong vòng 30 ngày, để xử lý các trường hợp đổi/trả hợp l�
 <span class="h">## Success metric</span>
 Giảm 50% support ticket về refund (baseline 18%/tháng)` }
     ],
-    ES: [
+    DISC: [
       { file: 'docs/events.md', lang: 'markdown', body:
 `<span class="h"># Refund Domain Events — Billing context</span>
 
@@ -1212,24 +1152,12 @@ Giảm 50% support ticket về refund (baseline 18%/tháng)` }
 <span class="h">## Policies</span>
 - <span class="n">EligibilityWindow</span>: order.settledAt within 30 days
 - <span class="n">ManagerApproval</span>: amount &gt; 5,000,000 VND
-- <span class="n">RetryOnFailure</span>: max 3 attempts, exponential backoff` }
-    ],
-    DE: [
-      { file: 'docs/glossary-decisions.md', lang: 'markdown', body:
-`<span class="h">## Refund vs Reversal — clarified by An (Finance Lead)</span>
+- <span class="n">RetryOnFailure</span>: max 3 attempts, exponential backoff
 
-| Term     | Meaning                                       |
-|----------|-----------------------------------------------|
-| <span class="k">Refund</span>   | Trả tiền sau khi giao dịch đã <span class="n">settle</span>          |
-| <span class="k">Reversal</span> | Huỷ giao dịch chưa settle (cùng auth window) |
+<span class="h">## Language decisions</span>
+<span class="ok">→</span> Tách <span class="k">Refund</span> (sau settle) vs <span class="k">Reversal</span> (trước settle) — KHÔNG dùng lẫn
+<span class="ok">→</span> Edge cases: <span class="n">PartialRefund</span> · <span class="n">CrossCurrencyRefund</span> (FX tại lúc settle)` },
 
-<span class="ok">→</span> Tách 2 thuật ngữ trong glossary, KHÔNG dùng lẫn.
-
-<span class="h">## Edge cases ghi nhận</span>
-- <span class="n">PartialRefund</span>: refund 1 line item trong đơn nhiều item
-- <span class="n">CrossCurrencyRefund</span>: order USD, refund VND <span class="o">→</span> dùng FX rate tại thời điểm settle (không phải lúc refund)` }
-    ],
-    GL0: [
       { file: 'specs/billing/glossary.md (delta)', lang: 'markdown', body:
 `<span class="h">## Refund (NEW · proposed by FT-204)</span>
 
@@ -1248,9 +1176,8 @@ Giảm 50% support ticket về refund (baseline 18%/tháng)` }
 
 <span class="k">PartialRefund</span>
   Refund nhỏ hơn tổng giá trị order.
-  Constraint: amount &lt; payment.amount` }
-    ],
-    CM: [
+  Constraint: amount &lt; payment.amount` },
+
       { file: 'specs/context-map.yaml (delta)', lang: 'yaml', body:
 `<span class="k">contexts</span>:
   <span class="k">Billing</span>:
