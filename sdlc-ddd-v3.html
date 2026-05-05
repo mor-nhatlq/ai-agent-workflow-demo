@@ -846,7 +846,6 @@ flowchart TB
   subgraph P1["PHASE 1 · Architecture and Implementation Plan"]
     direction TB
     PS["Architecture Plan<br/>Integration · service boundary · ADR"]:::plan
-    SPIKE["Spike (optional)<br/>Throwaway PoC · validate giả định"]:::spike
     PT["Implementation Plan<br/>Task list · TDD steps"]:::plan
   end
 
@@ -883,8 +882,6 @@ flowchart TB
 
   USER -->|"Yêu cầu"| DISC
   DISC -->|"Domain Model v0"| PS
-  PS -.->|"need PoC?"| SPIKE
-  SPIKE -.->|"learning"| PT
   PS --> PT
   PT -->|"Plan and Specs"| DEV
   DEV --> LINT
@@ -909,7 +906,6 @@ flowchart TB
 
   click USER call openNode("USER")
   click DISC call openNode("DISC")
-  click SPIKE call openNode("SPIKE")
   click PS call openNode("PS")
   click PT call openNode("PT")
   click DEV call openNode("DEV")
@@ -929,7 +925,6 @@ flowchart TB
   <div class="legend">
     <span><i style="background:#5B9DD9"></i>User Input</span>
     <span><i style="background:#8C7AC4"></i>Discovery</span>
-    <span><i style="background:#B68FC8"></i>Spike</span>
     <span><i style="background:#6B8DBF"></i>Plan</span>
     <span><i style="background:#5DA88C"></i>Implementation</span>
     <span><i style="background:#C8A35A"></i>Testing</span>
@@ -1043,7 +1038,6 @@ flowchart TB
       <div class="gloss-grp-h"><span class="num">7</span>Pipeline &amp; Deploy (V3)</div>
       <table class="gloss-table">
         <tr><td>Plan Review Gate</td><td>Human checkpoint giữa writing-plans và executing-plans — bắt developer tick checklist + đặt <code>Overall Decision: OK</code> mới được code.</td></tr>
-        <tr><td>Spike</td><td>Nhánh PoC ngắn (≤ 1 ngày) để validate giả định kỹ thuật rủi ro. Code <b>không merge</b>, chỉ giữ <code>findings.md</code>.</td></tr>
         <tr><td>Compliance Gate</td><td>Bộ kiểm SAST + DAST + SBOM + license + PII trước khi merge — block PR nếu vi phạm GDPR/PCI.</td></tr>
         <tr><td>SBOM (Software Bill of Materials)</td><td>Danh sách đầy đủ dependency + version + license của artifact, để audit lỗ hổng.</td></tr>
         <tr><td>SAST / DAST</td><td>Static / Dynamic Application Security Testing — quét code (static) + runtime (dynamic).</td></tr>
@@ -1199,24 +1193,6 @@ flowchart TB
         "<code>adr/0042-notification-conformist.md</code>",
         "Integration contract: Identity API endpoints cần thiết",
         "Event topic: <code>billing.refund.v1</code>"
-      ]
-    },
-    SPIKE: {
-      title: "Spike — Throwaway PoC (optional)",
-      phase: "Phase 1.5 · Spike", color: "spike",
-      input: [
-        "Strategic plan có giả định kỹ thuật rủi ro",
-        "Câu hỏi cần trả lời (vd. <i>Aurora chịu được 500 refund/s không?</i>)"
-      ],
-      cli: {
-        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">git checkout -b spike/refund-throughput</span>\n<span class="pmt">&gt;</span> <span class="you">/superpowers:brainstorm Validate refund throughput on Aurora</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:brainstorming</span>)\n  <span class="arrow">⎿</span>  <span class="out">Identify hypothesis: Aurora ServerlessV2 chịu 500 RPS refund insert</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">spike/load_test.py</span>) <span class="arg">[throwaway]</span>\n  <span class="arrow">⎿</span>  <span class="out">Locust scenario · 500 concurrent · 10 min ramp</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">locust -f spike/load_test.py</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">P95 latency: 84ms · max 220ms</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">Aurora CPU spike 78% · need ACU 4 → 8 in tactical plan</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">spike/findings.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Hypothesis: VALIDATED with caveats</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">git checkout main &amp;&amp; git branch -D spike/refund-throughput</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Spike branch deleted · only findings kept</span>\n\n<span class="status"><span class="star">✻</span> Spike done · 4h · 1 hypothesis validated · 1 caveat → Tactical plan</span>',
-        note: "Spike branch <b>không merge</b>. Chỉ <code>findings.md</code> được giữ lại để feed vào Tactical Plan. Time-box chặt: ≤ 1 ngày."
-      },
-      output: [
-        "<code>spike/findings.md</code> · validated/invalidated hypothesis",
-        "Caveat / risk được ghi nhận (vd. cần Aurora ACU 4→8)",
-        "Spike code <b>bị xoá</b>, không vào main branch"
       ]
     },
     PT: {
@@ -1461,7 +1437,6 @@ flowchart TB
     USER: "Product Owner viết yêu cầu thô (pain point, compliance constraint) thành ticket có acceptance criteria rõ — đầu vào của cả pipeline.",
     DISC: "<b>Buổi Research</b> với người am hiểu nghiệp vụ. AI dẫn dắt liệt kê sự kiện · ràng buộc · thuật ngữ · quan hệ giữa service. Output là <b>1 tài liệu duy nhất</b> <code>docs/domain.md</code> gộp glossary + events + integration map — dev đọc 1 file là đủ, AI dùng làm system prompt khi code.",
     PS:   "<b>Architecture Plan</b>: vẽ ranh giới service, integration pattern (REST · async event), SLA, fallback khi downstream service down. Quyết định lớn ghi thành <b>ADR</b> — đính kèm tài liệu, không phải code.",
-    SPIKE:"<b>Optional</b> · Khi plan có giả định kỹ thuật chưa chắc chắn (vd. payload có vừa SQS limit không, Aurora chịu được throughput không), tách 1 nhánh <b>throwaway PoC</b> trong vài giờ để validate trước. Code spike <b>không merge</b> — chỉ giữ findings.",
     PT:   "<b>Implementation Plan</b>: chia tính năng thành ~12 task nhỏ, mỗi task có acceptance test cụ thể. Cần human OK qua <b>plan-review-gate</b> mới được execute. Đây là plan dev đọc thẳng để code, không cần hiểu DDD lý thuyết.",
     DEV:  "Execute plan từng task. Bám <b>TDD: RED → GREEN → REFACTOR</b>. Task xong → tick trong <code>tasks.md</code>. Cấu trúc thư mục theo project convention (vd. <code>domain/service/api/</code> hoặc <code>features/</code>) — dev không cần thuộc DDD pattern, chỉ cần follow folder layout.",
     LINT: "Pre-commit hook chạy <b>linter chuẩn</b>: ESLint · Prettier · gitleaks (secret scan) · simple security check. Block commit nếu fail — bắt fix tại chỗ, không bypass <code>--no-verify</code>.",
@@ -1604,29 +1579,6 @@ Không xây ACL ở phía Notification để tránh maintenance overhead.
 <span class="h">## Consequences</span>
 + Schema thay đổi <span class="o">→</span> Notification phải migrate
 + Versioning bắt buộc (<span class="s">billing.refund.v1</span>)` }
-    ],
-    SPIKE: [
-      { file: 'spike/findings.md', lang: 'markdown', body:
-`<span class="h"># Spike findings · refund-throughput</span>
-
-<span class="h">## Hypothesis</span>
-Aurora ServerlessV2 (ACU 2-4) chịu được <span class="n">500 RPS</span> refund insert
-mà giữ P95 &lt; 100ms.
-
-<span class="h">## Method</span>
-Locust 500 concurrent · ramp 60s · sustain 10 min · refund payload thật.
-
-<span class="h">## Result</span>
-<span class="ok">✓</span> P95 latency: <span class="n">84ms</span>
-<span class="ok">✓</span> Throughput: <span class="n">512 RPS</span> sustained
-<span class="warn">⚠</span> Aurora CPU peak: <span class="n">78%</span> · ACU swing 2 → 4 mất 90s
-
-<span class="h">## Verdict</span>
-<span class="ok">VALIDATED</span> with caveat → Tactical plan phải
-bump ACU range lên <span class="n">4-8</span> để absorb peak.
-
-<span class="h">## Status</span>
-Spike branch <span class="er">DELETED</span> · only this file kept.` }
     ],
     PT: [
       { file: 'plan.md', lang: 'markdown', body:
