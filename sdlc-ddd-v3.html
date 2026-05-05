@@ -1116,7 +1116,7 @@ flowchart TB
     },
 
     DOCS: {
-      title: "Documentation Output — Plan + Architecture + Specs",
+      title: "Documentation Output — docs/domain.md",
       phase: "Step 1 · Planning", color: "plan",
       input: [
         "Master plan từ Planner",
@@ -1124,12 +1124,15 @@ flowchart TB
       ],
       cli: {
         kind: "os", label: "OPENSPEC", cwd: "~/project",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/openspec:propose Tổng hợp plan + research thành full documentation</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">plans/.../plan.md, research/*.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loaded master plan + 3 research reports</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">plans/.../phase-01-auth.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Phase 1 detail · context · todo · success criteria</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">docs/system-architecture.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Component diagram · data flow · API contracts</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">plan-review-gate</span>)\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">Generated review-checklist.md · status PENDING</span>\n\n<span class="status"><span class="star">✻</span> Docs ready · gate PENDING · awaiting human OK</span>',
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/openspec:propose Tổng hợp plan + research thành docs/domain.md</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">plans/.../plan.md, research/*.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loaded master plan + 3 research reports</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">docs/domain.md</span>) <span class="arg">— single source of truth</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Section 1 · Glossary</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Section 2 · Domain Events</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Section 3 · Integration Map</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Section 4 · Edge Cases</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">plan-review-gate</span>)\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">Generated review-checklist.md · status PENDING</span>\n\n<span class="status"><span class="star">✻</span> domain.md ready · 4 section · gate PENDING · awaiting human OK</span>',
         note: "<b>plan-review-gate</b> chặn execute cho tới khi developer tick checklist + đặt <code>Overall Decision: OK</code>."
       },
       output: [
-        "<code>plans/.../phase-XX-*.md</code> · chi tiết từng phase",
-        "<code>docs/system-architecture.md</code> · component + data flow + API contracts",
+        "<code>docs/domain.md</code> — single source of truth cho dev + AI",
+        "Section 1 · Glossary — thuật ngữ nghiệp vụ",
+        "Section 2 · Domain Events — sự kiện + payload",
+        "Section 3 · Integration Map — service nói chuyện với nhau",
+        "Section 4 · Edge Cases — trường hợp đặc biệt cần handle",
         "<code>review-checklist.md</code> · gate awaiting human OK"
       ]
     },
@@ -1335,7 +1338,7 @@ flowchart TB
     DESIGN_TOOL: "Hoàn thiện design system trên Figma · GG Stitch · Claude Design — chốt design tokens, color palette, typography, component library.",
     PLANNER:     "Planner Agent phân tích yêu cầu, lập master plan: chia thành các phase, xác định dependencies, ước lượng effort.",
     RESEARCHER:  "Researcher Agents chạy song song nghiên cứu kỹ thuật cho từng phần — chọn lib, so sánh approach, dò pattern phù hợp.",
-    DOCS:        "Tổng hợp output thành Documentation: master plan, architecture document, technical specs, ready cho Implementation.",
+    DOCS:        "Tổng hợp output thành 1 file <code>domain.md</code> — single source of truth cho dev và AI khi code: glossary, domain events, integration map, edge cases.",
     CODER:       "Developer Agent code theo plan, tuân thủ coding standard và architecture. Auto-check compile error sau mỗi file để fail-fast.",
     CODE_FILES:  "Source code production thực tế — clean, modular, mỗi file dưới 200 LOC, theo đúng cấu trúc đã định trong plan.",
     TESTER:      "Tester Agent viết và chạy 3 loại test (unit · integration · E2E). Fail thì gửi ngược Developer fix, repeat đến khi pass hết.",
@@ -1473,26 +1476,48 @@ Build MVP của project X trong 5 phase · est <span class="n">25 SP</span>
     ],
 
     DOCS: [
-      { file: 'docs/system-architecture.md', lang: 'markdown', body:
-`<span class="h"># System Architecture</span>
+      { file: 'docs/domain.md', lang: 'markdown', body:
+`<span class="h"># Domain Knowledge</span>
+<span class="c">&lt;!-- Single source of truth cho dev + AI khi code. --&gt;</span>
+<span class="c">&lt;!-- Sửa file này → mọi developer + AI đều load lại. --&gt;</span>
 
-<span class="h">## Components</span>
-- <span class="k">Frontend</span> · Next.js + React · static export
-- <span class="k">API</span> · Node.js + Fastify
-- <span class="k">DB</span> · Postgres 15 + Prisma ORM
-- <span class="k">Cache</span> · Redis (session + rate limit)
-- <span class="k">Queue</span> · BullMQ (background job)
+<span class="h">## 1. Glossary</span>
+<span class="c">&lt;!-- thuật ngữ nghiệp vụ thống nhất giữa biz + dev + AI --&gt;</span>
 
-<span class="h">## Data flow</span>
-Client → CDN → API Gateway → Fastify → Prisma → Postgres
-                                  └→ Redis (cache)
-                                  └→ BullMQ (async)
+- <span class="k">TermA</span>           <span class="c">&lt;!-- định nghĩa term A · ví dụ + ràng buộc --&gt;</span>
+- <span class="k">TermB</span>           <span class="c">&lt;!-- định nghĩa term B · phân biệt với term tương tự --&gt;</span>
+- <span class="k">TermA vs TermC</span>  <span class="c">&lt;!-- 2 từ dễ nhầm — KHÔNG dùng lẫn --&gt;</span>
 
-<span class="h">## API contracts</span>
-- <span class="k">POST /auth/register</span>  · <span class="s">{email, password}</span>
-- <span class="k">POST /auth/login</span>     · <span class="s">{email, password}</span> → token
-- <span class="k">POST /auth/refresh</span>   · <span class="s">{refreshToken}</span>     → newToken
-- ... (24 endpoints)` }
+<span class="h">## 2. Domain Events</span>
+<span class="c">&lt;!-- danh sách sự kiện nghiệp vụ + payload + producer/consumer --&gt;</span>
+
+- <span class="k">EventX</span>          <span class="c">&lt;!-- khi nào trigger · payload có gì · ai consume --&gt;</span>
+- <span class="k">EventY</span>          <span class="c">&lt;!-- ... --&gt;</span>
+
+<span class="h">### Commands</span>
+<span class="c">&lt;!-- yêu cầu thay đổi state · có thể bị từ chối --&gt;</span>
+- <span class="k">CommandA</span>        <span class="c">&lt;!-- actor · guard rule --&gt;</span>
+
+<span class="h">### Policies</span>
+<span class="c">&lt;!-- quy tắc tự động: khi event X → command Y --&gt;</span>
+- <span class="n">PolicyA</span>         <span class="c">&lt;!-- mô tả ngắn --&gt;</span>
+
+<span class="h">## 3. Integration Map</span>
+<span class="c">&lt;!-- service nào nói chuyện với service nào · theo pattern gì --&gt;</span>
+
+<span class="k">publishes</span>:        <span class="c">&lt;!-- event mình emit ra ngoài --&gt;</span>
+  - EventX
+  - EventY
+
+<span class="k">depends_on</span>:       <span class="c">&lt;!-- service mình phụ thuộc --&gt;</span>
+  - service: ServiceA  <span class="c">&lt;!-- pattern · timeout · retry policy --&gt;</span>
+  - service: ServiceB  <span class="c">&lt;!-- ... --&gt;</span>
+
+<span class="h">## 4. Edge Cases</span>
+<span class="c">&lt;!-- các trường hợp đặc biệt cần handle khi code --&gt;</span>
+
+- <span class="k">EdgeCase1</span>       <span class="c">&lt;!-- khi nào xảy ra · cách xử lý --&gt;</span>
+- <span class="k">EdgeCase2</span>       <span class="c">&lt;!-- ... --&gt;</span>` }
     ],
 
     CODER: [
