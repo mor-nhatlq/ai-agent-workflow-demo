@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DDD-Aware SDLC · V3 — Production-Ready Pipeline</title>
+<title>AI-Driven SDLC · V3 — TDD-Based Pipeline (DDD docs as guidance)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -601,7 +601,7 @@
 
   <div class="bar">
     <div class="dots"><i></i><i></i><i></i></div>
-    <div class="path">walkthrough — refund-feature.ddd-sdlc-v3 · production-ready · 13 upgrades + fast lane</div>
+    <div class="path">walkthrough — refund-feature.sdlc-v3 · TDD-based pipeline · DDD chỉ ở tài liệu Research/Plan</div>
   </div>
 
   <div class="top-grid">
@@ -699,16 +699,16 @@
       <div class="struct-pane" id="pane-ctx">
 <pre class="tree"><span class="dir">services/billing/</span>
 ├── <span class="dir">src/billing/</span>
-│   ├── <span class="imp">domain/</span>                  <span class="com"># thuần nghiệp vụ — KHÔNG import infra</span>
-│   │   ├── <span class="file">refund_request.py</span>         <span class="com"># Aggregate root</span>
-│   │   ├── <span class="dir">value_objects/</span>            <span class="com"># Money, RefundId, ...</span>
-│   │   ├── <span class="dir">events/</span>                   <span class="com"># RefundRequested, ...</span>
-│   │   └── <span class="dir">services/</span>                 <span class="com"># RefundEligibilityChecker</span>
-│   ├── <span class="imp">application/</span>             <span class="com"># orchestration, transactions</span>
+│   ├── <span class="imp">domain/</span>                  <span class="com"># business logic · KHÔNG gọi DB/API trực tiếp</span>
+│   │   ├── <span class="file">refund_request.py</span>         <span class="com"># class chính của tính năng</span>
+│   │   ├── <span class="dir">value_objects/</span>            <span class="com"># Money, RefundId · helper classes</span>
+│   │   ├── <span class="dir">events/</span>                   <span class="com"># event class · RefundRequested ...</span>
+│   │   └── <span class="dir">services/</span>                 <span class="com"># logic phức tạp dùng nhiều class</span>
+│   ├── <span class="imp">application/</span>             <span class="com"># orchestration · transaction · publish event</span>
 │   │   └── <span class="file">refund_service.py</span>
-│   ├── <span class="imp">infrastructure/</span>          <span class="com"># adapters cụ thể (code)</span>
+│   ├── <span class="imp">infrastructure/</span>          <span class="com"># adapter cụ thể (DB · API · event bus)</span>
 │   │   ├── <span class="dir">repositories/</span>            <span class="com"># Postgres impl</span>
-│   │   ├── <span class="dir">adapters/</span>                <span class="com"># BillingCustomerAdapter (ACL)</span>
+│   │   ├── <span class="dir">adapters/</span>                <span class="com"># gọi service khác qua HTTP/SDK</span>
 │   │   └── <span class="dir">events/</span>                  <span class="com"># EventBridge publisher</span>
 │   └── <span class="imp">interface/</span>               <span class="com"># entry points</span>
 │       ├── <span class="dir">api/</span>                     <span class="com"># REST handlers</span>
@@ -839,36 +839,35 @@ flowchart TB
 
   USER["User / Product Owner<br/>Định nghĩa yêu cầu FT-204"]:::input
 
-  subgraph P0["PHASE 0 · Domain Discovery (A)"]
+  subgraph P0["PHASE 0 · Research and Discovery"]
     direction TB
-    DISC["Domain Discovery<br/>Event Storming → Glossary → Context Map"]:::discover
+    DISC["Research and Discovery<br/>Sinh tài liệu định hướng theo DDD<br/>(glossary · context map · event list)"]:::discover
   end
 
-  subgraph P1["PHASE 1 · Strategic + Tactical Plan (B)"]
+  subgraph P1["PHASE 1 · Architecture and Implementation Plan"]
     direction TB
-    PS["Strategic Plan<br/>ACL · Integration"]:::plan
-    SPIKE["[I] Spike (optional)<br/>Throwaway PoC · validate giả định"]:::spike
-    PT["Tactical Plan<br/>Aggregates · Events"]:::plan
+    PS["Architecture Plan<br/>Integration · service boundary · ADR"]:::plan
+    SPIKE["Spike (optional)<br/>Throwaway PoC · validate giả định"]:::spike
+    PT["Implementation Plan<br/>Task list · TDD steps"]:::plan
   end
 
-  subgraph P2["PHASE 2 · Implementation (C)"]
+  subgraph P2["PHASE 2 · Implementation (TDD)"]
     direction TB
-    DEV["Developer Agent<br/>Layered Code"]:::impl
-    LINT["Architecture + Glossary<br/>Linter"]:::impl
+    DEV["Developer Agent<br/>TDD: RED → GREEN → REFACTOR"]:::impl
+    LINT["Standard Linter<br/>ESLint · Prettier · pre-commit security"]:::impl
   end
 
-  subgraph P3["PHASE 3 · Testing (D)"]
+  subgraph P3["PHASE 3 · Testing"]
     direction TB
-    SBE["Specification by Example<br/>Given-When-Then"]:::test
+    SBE["Specification by Example<br/>Acceptance test · Given-When-Then"]:::test
     UIT["Unit · Integration · E2E"]:::test
     CT["Contract Test"]:::test
   end
 
-  subgraph P4["PHASE 4 · Review (E + J)"]
+  subgraph P4["PHASE 4 · Review"]
     direction TB
-    CR["Code Reviewer<br/>Quality and Security"]:::review
-    CMP["[J] Compliance Gate<br/>SAST · DAST · PII · License"]:::comply
-    DMR["Domain Model Reviewer<br/>Aggregate · ACL · Drift"]:::review
+    CR["Code Reviewer<br/>Quality · readability · security"]:::review
+    CMP["Compliance Gate<br/>SAST · DAST · PII · License"]:::comply
   end
 
   subgraph P5["PHASE 5 · Delivery (G + K)"]
@@ -895,18 +894,16 @@ flowchart TB
   UIT --> CT
   CT -->|"Test Results"| CR
   CR --> CMP
-  CMP --> DMR
-  DMR -->|"Approved"| PR
+  CMP -->|"Approved"| PR
   PR --> ROLL
   ROLL -->|"100% traffic"| SY
   SY --> OPS
 
   CT -.->|"Tests Fail · Re-test"| DEV
-  DMR -.->|"Issues Found · Refactor"| DEV
-  DMR -.->|"(F) Deeper Insight"| PS
+  CR -.->|"Issues Found · Refactor"| DEV
   CMP -.->|"Compliance Block"| DEV
   ROLL -.->|"SLO breach · Rollback"| PR
-  OPS -.->|"Incident → Discovery"| DISC
+  OPS -.->|"Incident → Research"| DISC
   SY -.->|"Knowledge Sync"| DISC
 
   class P0,P1,P2,P3,P4,P5,P6 phase
@@ -923,7 +920,6 @@ flowchart TB
   click CT call openNode("CT")
   click CR call openNode("CR")
   click CMP call openNode("CMP")
-  click DMR call openNode("DMR")
   click PR call openNode("PR")
   click ROLL call openNode("ROLL")
   click SY call openNode("SY")
@@ -945,6 +941,12 @@ flowchart TB
     <span><i style="background:#9CB7E0"></i>Operate</span>
   </div>
 
+  <!-- ── PHILOSOPHY banner ────────────────────────── -->
+  <div style="margin: 14px 24px 0; padding: 14px 18px; background: var(--bg-2); border: 1px solid var(--border); border-left: 3px solid var(--c-discover); border-radius: 10px; font-size: 13px; color: var(--text-2); line-height: 1.6;">
+    <b style="color:var(--c-discover); font-family:var(--font-mono); font-size:11px; letter-spacing:0.5px; text-transform:uppercase">// philosophy</b><br>
+    <b style="color:var(--text-1)">DDD chỉ ở <u>tài liệu đầu ra</u> của Research &amp; Plan</b> (glossary · context map · ADR · architecture plan). Khi triển khai, dev <b>thuần TDD</b> theo plan — không cần thuộc DDD theory, không có "Domain Model Reviewer", không có loop "Refactor toward Deeper Insight". Junior dev đọc plan rồi code TDD bình thường vẫn demo được.
+  </div>
+
   <!-- ── FAST LANE banner (M) ────────────────────────── -->
   <div style="margin: 14px 24px 0; padding: 12px 16px; background: var(--bg-2); border: 1px dashed rgba(220,140,80,0.4); border-radius: 10px; font-family: var(--font-mono); font-size: 12px; color: var(--text-2);">
     <b style="color:#D38F5F">[M] Fast Lane</b>
@@ -956,8 +958,8 @@ flowchart TB
   <!-- ── GLOSSARY ────────────────────────────────────── -->
   <section class="gloss" aria-label="Glossary">
     <span class="gloss-h">// Reference glossary</span>
-    <h2>Bảng từ ngữ nghiệp vụ — DDD &amp; SDLC</h2>
-    <p>9 nhóm thuật ngữ dùng trong pipeline V3 — strategic/tactical design, event-driven, layering, test, deploy, AI tooling.</p>
+    <h2>Bảng từ ngữ — DDD reference + Pipeline core</h2>
+    <p><b style="color:var(--text-2)">Nhóm 1–5</b> là <b>DDD reference</b> · chỉ cần khi <u>đọc tài liệu Research/Plan</u>, không cần thuộc khi triển khai code. <b style="color:var(--text-2)">Nhóm 6–9</b> là <b>Pipeline core</b> · từ ngữ thực tế cần biết để vận hành pipeline (TDD · deploy · tooling).</p>
 
     <!-- 1 -->
     <div class="gloss-grp">
@@ -1162,32 +1164,32 @@ flowchart TB
       ]
     },
     DISC: {
-      title: "Domain Discovery — Event Storming · Glossary · Context Map",
-      phase: "Phase 0 · Discovery", color: "discover",
+      title: "Research and Discovery — sinh tài liệu định hướng (DDD)",
+      phase: "Phase 0 · Research", color: "discover",
       input: [
         "Ticket FT-204 + acceptance criteria",
-        "Domain Expert: An (Finance Lead), Linh (Customer Service Lead)",
-        "Glossary v3.2 + <code>context-map.yaml</code> hiện tại"
+        "Người am hiểu nghiệp vụ: An (Finance Lead), Linh (Customer Service Lead)",
+        "Glossary v3.2 + <code>context-map.yaml</code> hiện tại (nếu có)"
       ],
       cli: {
         kind: "sp", label: "SUPERPOWERS + OPENSPEC", cwd: "~/billing-service",
         cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:brainstorm Domain discovery cho FT-204 (Refund flow)</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:brainstorming</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill · Domain Expert mode</span>\n\n<span class="bullet">●</span> <span class="tool">Event Storming Session</span> <span class="arg">(với An + Linh)</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Events: RefundRequested · RefundApproved · RefundRejected</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Events: RefundCompleted · RefundFailed</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Commands: RequestRefund · ApproveRefund</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Policies: 30-day-window · manager-approval-&gt;5M</span>\n\n<span class="bullet">●</span> <span class="tool">Language Validation</span> <span class="arg">(hỏi An)</span>\n  <span class="arrow">⎿</span>  <span class="out">[An] Reversal = huỷ giao dịch chưa settle</span>\n  <span class="arrow">⎿</span>  <span class="out">[An] Refund = trả tiền sau settle — KHÁC NHAU</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Tách 2 thuật ngữ trong Ubiquitous Language</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>) <span class="arg">— glossary delta</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Write specs/billing/glossary.md (4 new terms)</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">RefundRequest · EligibilityWindow</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">ManagerApprovalThreshold · PartialRefund</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>) <span class="arg">— context map delta</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Billing → Identity : <span class="key">Customer/Supplier</span> via ACL</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Billing → Notification : <span class="key">Conformist</span> via EventBus</span>\n\n<span class="status"><span class="star">✻</span> Discovery done · 12 events · 4 terms · 3 relationships · 2 edge cases noted</span>',
-        note: "Đây là 1 buổi Discovery duy nhất với Domain Expert — gộp Event Storming, validate ngôn ngữ, glossary và context map vào cùng session để giữ tính liền mạch."
+        note: "Buổi Research duy nhất, AI dẫn dắt. Output là <b>tài liệu</b> (glossary, context map, event list) — dev đọc tham chiếu khi code, KHÔNG cần thuộc DDD theory để áp vào triển khai."
       },
       output: [
-        "<code>docs/events.md</code> · sticky-board export (12 events · 4 actors · 5 policies)",
-        "<code>specs/billing/glossary.md</code> delta · 4 term mới (Ubiquitous Language)",
-        "<code>specs/context-map.yaml</code> delta · 3 quan hệ giữa context",
+        "<code>docs/events.md</code> — danh sách sự kiện nghiệp vụ + actor + policy",
+        "<code>docs/glossary.md</code> delta — 4 thuật ngữ mới với định nghĩa",
+        "<code>docs/context-map.yaml</code> delta — quan hệ giữa các service",
         "Quyết định ngôn ngữ: tách <code>Refund</code> vs <code>Reversal</code>",
         "Edge cases ghi nhận: partial refund · cross-currency refund"
       ]
     },
     PS: {
-      title: "Strategic Plan — Integration · ACL · SLA",
+      title: "Architecture Plan — service boundary · integration · SLA",
       phase: "Phase 1 · Plan", color: "plan",
       input: [
-        "Glossary v0 + Context Map",
-        "Domain events &amp; commands từ Discovery"
+        "Tài liệu Research (events · glossary · context map)",
+        "Yêu cầu phi chức năng (SLA · throughput · compliance)"
       ],
       cli: {
         kind: "os", label: "OPENSPEC", cwd: "~/billing-service",
@@ -1219,11 +1221,11 @@ flowchart TB
       ]
     },
     PT: {
-      title: "Tactical Plan — Aggregates · Events · Repos",
+      title: "Implementation Plan — task list · TDD steps",
       phase: "Phase 1 · Plan", color: "plan",
       input: [
-        "Strategic Plan đã chốt",
-        "Aggregate hiện tại trong Billing: <code>Order</code>, <code>Payment</code>"
+        "Architecture Plan đã chốt + ADR",
+        "Tài liệu Research (events, glossary để tham chiếu khi đặt tên)"
       ],
       cli: {
         kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
@@ -1232,17 +1234,17 @@ flowchart TB
       },
       output: [
         "<code>plan.md</code> chi tiết với 12 task",
-        "Aggregate design: <code>RefundRequest</code> với invariants",
+        "Mỗi task có acceptance test rõ ràng (input/output)",
         "<code>tasks.md</code> trong OpenSpec change",
         "<b>Gate:</b> chờ <code>plan-review-gate</code> approve"
       ]
     },
     DEV: {
-      title: "Developer Agent — Layered Code",
+      title: "Developer Agent — Implementation with TDD",
       phase: "Phase 2 · Implementation", color: "impl",
       input: [
         "<code>plan.md</code> đã APPROVED qua plan-review-gate",
-        "Tactical design + glossary"
+        "Project folder convention (sẵn có) + glossary để tham chiếu naming"
       ],
       cli: {
         kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
@@ -1258,38 +1260,37 @@ flowchart TB
       ]
     },
     LINT: {
-      title: "Architecture + Glossary Linter",
+      title: "Standard Linter — pre-commit hook",
       phase: "Phase 2 · Implementation", color: "impl",
       input: [
-        "Source code mới sinh",
-        "<code>arch-rules.yaml</code> + <code>glossary.md</code>"
+        "Source code thay đổi · staged files",
+        "Cấu hình <code>.eslintrc</code> · <code>.prettierrc</code> · <code>.gitleaks.toml</code>"
       ],
       cli: {
         kind: "sp", label: "PRE-COMMIT HOOK", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">git commit -m "feat(billing): add refund aggregate"</span>\n\n<span class="bullet">●</span> <span class="tool">Hook</span>(<span class="arg">PreToolUse · pre-commit</span>)\n  <span class="arrow">⎿</span>  <span class="out">Running .claude/hooks/lint-arch-glossary.sh</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">npm run lint:arch</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">domain/ ↛ infrastructure/</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">ACL used when calling Identity</span>\n  <span class="arrow">⎿</span>  <span class="err">✗</span> <span class="out">refund_api.py:42 calls IdentityClient directly</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">suggest: use CustomerAdapter (ACL)</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">npm run lint:glossary</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">RefundRequest, EligibilityWindow OK</span>\n  <span class="arrow">⎿</span>  <span class="err">✗</span> <span class="out">refund_service.py:18 — "cancel_refund"</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">glossary term: "reject_refund"</span>\n\n<span class="status" style="color:#E36471"><span class="star" style="color:#E36471">✗</span> FAIL · 2 violations · commit blocked</span>',
-        note: "Hook fail → fix tại chỗ rồi commit lại; không bypass <code>--no-verify</code>."
+        cmd: '<span class="pmt">&gt;</span> <span class="you">git commit -m "feat: add refund flow"</span>\n\n<span class="bullet">●</span> <span class="tool">Hook</span>(<span class="arg">PreToolUse · pre-commit</span>)\n  <span class="arrow">⎿</span>  <span class="out">Running .claude/hooks/pre-commit.sh</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">npm run lint</span>) <span class="arg">— ESLint + Prettier</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">No style issue · 0 warning</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">gitleaks protect --staged</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">No secret leaked</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">pytest --collect-only</span>) <span class="arg">— smoke check</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">All tests collectible · no syntax error</span>\n\n<span class="status"><span class="star">✻</span> Linter passed · commit allowed</span>',
+        note: "Linter chuẩn — không có DDD-specific rule (boundary check, glossary drift). Đây chỉ là gate cơ bản: style + secret + syntax."
       },
       output: [
-        "<code>arch-lint-report.json</code>",
-        "<code>glossary-drift.json</code>",
-        "Pre-commit hook fail → dev fix trước khi push"
+        "Linter pass/fail kết quả · stdout",
+        "Commit được phép (hoặc bị chặn) · không bypass <code>--no-verify</code>"
       ]
     },
     SBE: {
-      title: "Specification by Example (BDD)",
+      title: "Specification by Example (acceptance test)",
       phase: "Phase 3 · Test", color: "test",
       input: [
-        "Glossary v3.2 + ngôn ngữ aggregate",
-        "Acceptance criteria từ FT-204"
+        "Acceptance criteria từ FT-204",
+        "Glossary để tham chiếu naming (không bắt buộc)"
       ],
       cli: {
         kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:test-driven-development Refund BDD specs</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:test-driven-development</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">docs/glossary.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loaded Ubiquitous Language</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">features/billing/refund.feature</span>)\n  <span class="arrow">⎿</span>  <span class="out">Feature: <span class="key">Refund Request</span></span>\n  <span class="arrow">⎿</span>  <span class="out">  Scenario: Customer requests refund within window</span>\n  <span class="arrow">⎿</span>  <span class="out">    Given an Order settled 10 days ago</span>\n  <span class="arrow">⎿</span>  <span class="out">    When the Customer requests a Refund of 2,000,000 VND</span>\n  <span class="arrow">⎿</span>  <span class="out">    Then a RefundRequest is created in <span class="key">Pending</span> state</span>\n  <span class="arrow">⎿</span>  <span class="out">    And event <span class="key">RefundRequested</span> is published</span>\n\n  <span class="arrow">⎿</span>  <span class="out">  Scenario: Refund above threshold needs Manager Approval</span>\n  <span class="arrow">⎿</span>  <span class="out">    When the Customer requests a Refund of 8,000,000 VND</span>\n  <span class="arrow">⎿</span>  <span class="out">    Then the state is <span class="key">PendingApproval</span></span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">features/steps/refund_steps.py</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">9 step definitions</span>\n\n<span class="status"><span class="star">✻</span> 5 scenarios · 9 steps · using glossary terms only</span>'
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:test-driven-development Refund acceptance scenarios</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:test-driven-development</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">docs/glossary.md</span>) <span class="arg">[reference]</span>\n  <span class="arrow">⎿</span>  <span class="out">Tham chiếu thuật ngữ khi đặt tên scenario</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">features/refund.feature</span>)\n  <span class="arrow">⎿</span>  <span class="out">Feature: Refund</span>\n  <span class="arrow">⎿</span>  <span class="out">  Scenario: Customer requests refund within window</span>\n  <span class="arrow">⎿</span>  <span class="out">    Given an Order settled 10 days ago</span>\n  <span class="arrow">⎿</span>  <span class="out">    When the Customer requests a Refund of 2,000,000 VND</span>\n  <span class="arrow">⎿</span>  <span class="out">    Then the request is created with status <span class="key">Pending</span></span>\n\n  <span class="arrow">⎿</span>  <span class="out">  Scenario: Refund above threshold needs Manager Approval</span>\n  <span class="arrow">⎿</span>  <span class="out">    When the Customer requests a Refund of 8,000,000 VND</span>\n  <span class="arrow">⎿</span>  <span class="out">    Then the request status is <span class="key">PendingApproval</span></span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">features/steps/refund_steps.py</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">9 step definitions</span>\n\n<span class="status"><span class="star">✻</span> 5 scenarios · 9 steps</span>'
       },
       output: [
-        "<code>features/billing/refund.feature</code>",
+        "<code>features/refund.feature</code> · 5 scenario",
         "Step definitions skeleton",
-        "Tests viết bằng đúng glossary terms"
+        "QA/PO không biết code vẫn đọc và review được"
       ]
     },
     UIT: {
@@ -1460,22 +1461,21 @@ flowchart TB
   // ────────────── Plain-Vietnamese summary per node ──────────────
   const PURPOSES = {
     USER: "Product Owner viết yêu cầu thô (pain point, compliance constraint) thành ticket có acceptance criteria rõ — đầu vào của cả pipeline.",
-    DISC: "Một buổi <b>Domain Discovery</b> với Domain Expert: chạy <b>Event Storming</b> tìm events/commands/actors/policies, validate ngôn ngữ (vd. <i>Refund</i> vs <i>Reversal</i>), chốt <b>Ubiquitous Language</b> trong <code>glossary.md</code>, và vẽ <b>Context Map</b> (ACL · Conformist · Customer/Supplier) — biến yêu cầu mơ hồ thành domain model + ngôn ngữ chung cho cả team và AI.",
-    PS:   "<b>Strategic design</b>: chọn integration pattern giữa các context, SLA, fallback khi downstream service down. Mọi quyết định lớn ghi thành <b>ADR</b>.",
-    SPIKE:"<b>Optional</b> · Khi tactical plan có giả định kỹ thuật chưa chắc chắn (vd. event payload có vừa SQS limit không, throughput Aurora chịu được không), tách 1 nhánh <b>throwaway PoC</b> trong vài giờ để validate trước. Code spike <b>không merge</b> — chỉ để học.",
-    PT:   "<b>Tactical design</b>: Aggregate nào mới, invariants, Repository, Domain Service, event handler — sinh plan ~12 task. Cần human OK qua <b>plan-review-gate</b> mới được execute.",
-    DEV:  "Execute plan từng task, code theo layering DDD (<code>domain/application/infrastructure/interface</code>), bám TDD (<b>RED → GREEN → REFACTOR</b>). Task xong → tick trong <code>tasks.md</code>.",
-    LINT: "Pre-commit hook tự chạy. <b>Block commit</b> nếu code phá boundary (domain import infrastructure) hoặc dùng term ngoài glossary — bắt fix tại chỗ, không bypass.",
-    SBE:  "Viết <code>.feature</code> dạng <b>Given-When-Then</b> bằng đúng glossary terms — Domain Expert &amp; QA không biết code vẫn đọc và review được scenario.",
+    DISC: "<b>Buổi Research</b> với người am hiểu nghiệp vụ. AI dẫn dắt liệt kê các sự kiện nghiệp vụ + ràng buộc + thuật ngữ. Output là <b>tài liệu định hướng theo DDD</b> — glossary, context map, event list — để dev tham chiếu khi code, KHÔNG phải thứ developer phải thuộc lòng.",
+    PS:   "<b>Architecture Plan</b>: vẽ ranh giới service, integration pattern (REST · async event), SLA, fallback khi downstream service down. Quyết định lớn ghi thành <b>ADR</b> — đính kèm tài liệu, không phải code.",
+    SPIKE:"<b>Optional</b> · Khi plan có giả định kỹ thuật chưa chắc chắn (vd. payload có vừa SQS limit không, Aurora chịu được throughput không), tách 1 nhánh <b>throwaway PoC</b> trong vài giờ để validate trước. Code spike <b>không merge</b> — chỉ giữ findings.",
+    PT:   "<b>Implementation Plan</b>: chia tính năng thành ~12 task nhỏ, mỗi task có acceptance test cụ thể. Cần human OK qua <b>plan-review-gate</b> mới được execute. Đây là plan dev đọc thẳng để code, không cần hiểu DDD lý thuyết.",
+    DEV:  "Execute plan từng task. Bám <b>TDD: RED → GREEN → REFACTOR</b>. Task xong → tick trong <code>tasks.md</code>. Cấu trúc thư mục theo project convention (vd. <code>domain/service/api/</code> hoặc <code>features/</code>) — dev không cần thuộc DDD pattern, chỉ cần follow folder layout.",
+    LINT: "Pre-commit hook chạy <b>linter chuẩn</b>: ESLint · Prettier · gitleaks (secret scan) · simple security check. Block commit nếu fail — bắt fix tại chỗ, không bypass <code>--no-verify</code>.",
+    SBE:  "Viết <code>.feature</code> dạng <b>Given-When-Then</b> theo acceptance criteria. Dùng từ ngữ tự nhiên (có thể tham chiếu glossary nếu muốn) — QA không biết code vẫn đọc và review được scenario.",
     UIT:  "Chạy <b>unit + integration + E2E</b> test. Fail → pipeline auto loop ngược về Developer (3 → 2).",
-    CT:   "<b>Consumer-driven contract test</b> bằng Pact: đảm bảo event/API schema không phá Notification, Identity đang consume. Pass = safe to deploy.",
-    CR:   "Code Reviewer kiểm chất lượng kỹ thuật + security: race condition, secret leak, SQL injection, performance — như code review truyền thống.",
-    CMP:  "<b>Compliance &amp; Security Gate</b>: chạy SAST (Snyk/Semgrep) · DAST · SBOM (Syft) · license scan · PII data classification · GDPR/PCI check cho refund flow. Block PR nếu critical CVE hoặc secret/PII rò rỉ.",
-    DMR:  "Reviewer thứ 2 chỉ kiểm <b>domain model health</b>: Aggregate có <b>anemic</b> không, <b>ACL leak</b>, <b>language drift</b>. Sai bản chất → kích <b>Loop F</b> quay về Plan, không patch code lấy lệ.",
-    PR:   "AI sinh conventional commit, push branch, mở PR đính kèm test plan + link OpenSpec change + ADR. CI build image &amp; push ECR; chạy <code>cdk diff</code> để review hạ tầng thay đổi; merge → <b>CDK deploy</b> các stack (Billing/Database/Service/Pipeline) qua CodePipeline; ECS Fargate staging chờ manual approval cho prod.",
-    ROLL: "<b>Gradual Rollout</b>: bật feature flag (LaunchDarkly), route canary 5% → 25% → 50% → 100% theo SLO check (P95 latency, error rate, refund completion rate). Breach SLO → <b>auto-rollback</b> qua CodeDeploy + revert flag.",
-    SY:   "Post-merge: move change từ <code>changes/</code> sang <code>archive/</code>, apply specs delta, bump glossary version, register event schema lên <b>Glue Schema Registry</b> với enforce BACKWARD compatibility — knowledge sync cho sprint sau.",
-    OPS:  "<b>Operate phase</b>: SLO monitoring 24/7, error budget tracking, oncall alerting (PagerDuty), runbook tự động. Khi có incident → root cause → tạo <b>incident report</b> + feed back vào Discovery loop để tinh chỉnh domain model (vd. phát hiện edge case nghiệp vụ mới)."
+    CT:   "<b>Consumer-driven contract test</b> bằng Pact: đảm bảo event/API schema không phá các service đang consume khi deploy độc lập. Pass = safe to deploy.",
+    CR:   "Code Reviewer kiểm chất lượng kỹ thuật + readability + security: race condition, secret leak, SQL injection, performance, naming — như code review truyền thống. <b>Không kiểm DDD theory</b>.",
+    CMP:  "<b>Compliance &amp; Security Gate</b>: chạy SAST (Snyk/Semgrep) · DAST · SBOM (Syft) · license scan · PII data classification · GDPR/PCI check. Block PR nếu critical CVE hoặc secret/PII rò rỉ.",
+    PR:   "AI sinh conventional commit, push branch, mở PR đính kèm test plan + link spec + ADR. CI build image &amp; push ECR; chạy <code>cdk diff</code> review hạ tầng; merge → <b>CDK deploy</b> các stack qua CodePipeline; ECS Fargate staging chờ manual approval cho prod.",
+    ROLL: "<b>Gradual Rollout</b>: bật feature flag (LaunchDarkly), route canary 5% → 25% → 50% → 100% theo SLO check (P95 latency, error rate, completion rate). Breach SLO → <b>auto-rollback</b> qua CodeDeploy + revert flag.",
+    SY:   "Post-merge: archive spec change, apply delta, bump glossary nếu có term mới, register event schema lên <b>Glue Schema Registry</b> với enforce BACKWARD compatibility — knowledge sync cho sprint sau.",
+    OPS:  "<b>Operate phase</b>: SLO monitoring 24/7, error budget tracking, oncall alerting (PagerDuty), runbook tự động. Khi có incident → root cause → tạo <b>incident report</b>, nếu phát hiện edge case nghiệp vụ mới thì feed vào Research sprint sau."
   };
 
   // ────────────── Artifact icons (SVG by lang) ──────────────
