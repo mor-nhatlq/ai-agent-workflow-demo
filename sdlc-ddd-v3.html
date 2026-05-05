@@ -843,15 +843,19 @@ flowchart TB
     BRAINSTORM["Brainstorm Agent<br/>Discuss and Generate Ideas"]:::discover
     DOCS_INIT["Docs Manager Agent<br/>SRS · Wireframe · Mockup"]:::discover
     DESIGN_TOOL["Figma · GG Stitch · Claude Design<br/>Refined Product Design"]:::discover
+    JIRA_PUSH["Push to Jira via MCP<br/>Tạo Epic + child tickets"]:::discover
     BRAINSTORM --> DOCS_INIT
     DOCS_INIT --> DESIGN_TOOL
+    DESIGN_TOOL --> JIRA_PUSH
   end
 
   subgraph P1["STEP 1 · Planning and Documentation"]
     direction TB
+    JIRA_FETCH["Fetch from Jira via MCP<br/>Lấy task đã define"]:::plan
     PLANNER["Planner Agent<br/>Analyze and Create Plan"]:::plan
     RESEARCHER["Researcher Agents<br/>Parallel Technical Research"]:::plan
-    DOCS["Documentation Output<br/>Plan + Architecture + Specs"]:::plan
+    DOCS["Documentation Output<br/>docs/domain.md"]:::plan
+    JIRA_FETCH --> PLANNER
     PLANNER --> RESEARCHER
     RESEARCHER --> DOCS
   end
@@ -906,6 +910,8 @@ flowchart TB
   click BRAINSTORM call openNode("BRAINSTORM")
   click DOCS_INIT call openNode("DOCS_INIT")
   click DESIGN_TOOL call openNode("DESIGN_TOOL")
+  click JIRA_PUSH call openNode("JIRA_PUSH")
+  click JIRA_FETCH call openNode("JIRA_FETCH")
   click PLANNER call openNode("PLANNER")
   click RESEARCHER call openNode("RESEARCHER")
   click DOCS call openNode("DOCS")
@@ -1076,6 +1082,45 @@ flowchart TB
         "<code>design/figma-link.md</code> · link Figma file",
         "<code>docs/design-system.md</code> · tokens + typography + spacing",
         "Component library 24 component reusable"
+      ]
+    },
+
+    JIRA_PUSH: {
+      title: "Push to Jira via MCP — Create Epic + Tickets",
+      phase: "Step 0 · Project Init", color: "discover",
+      input: [
+        "SRS + wireframes + design system từ STEP 0",
+        "Phase breakdown sơ bộ"
+      ],
+      cli: {
+        kind: "sp", label: "ATLASSIAN MCP", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/atlassian:spec-to-backlog Push các task đã define lên Jira</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">atlassian:spec-to-backlog</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">docs/srs.md, docs/design-system.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loaded SRS · 14 functional req · 8 non-functional</span>\n\n<span class="bullet">●</span> <span class="tool">MCP</span>(<span class="arg">atlassian.createJiraIssue</span>) <span class="arg">— Epic</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Created Epic <span class="key">PROJ-100</span> · "Auth + dashboard MVP"</span>\n\n<span class="bullet">●</span> <span class="tool">MCP</span>(<span class="arg">atlassian.createJiraIssue</span>) <span class="arg">×5 — child tickets</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">PROJ-101 · "Phase 1: Auth &amp; user mgmt" (5 SP)</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">PROJ-102 · "Phase 2: Data layer" (6 SP)</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">PROJ-103 · "Phase 3: API endpoints" (5 SP)</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">PROJ-104 · "Phase 4: UI dashboard" (6 SP)</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">PROJ-105 · "Phase 5: Deploy &amp; observe" (3 SP)</span>\n\n<span class="bullet">●</span> <span class="tool">MCP</span>(<span class="arg">atlassian.createIssueLink</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Link 5 child tickets vào Epic PROJ-100</span>\n\n<span class="status"><span class="star">✻</span> Backlog đã sync lên Jira · 1 Epic + 5 ticket · est 25 SP</span>',
+        note: "Dùng <b>Atlassian MCP</b> để tạo issue thẳng từ Claude Code, không cần copy-paste tay. Có thể đính kèm wireframe / mockup làm attachment."
+      },
+      output: [
+        "Jira Epic <code>PROJ-100</code> · MVP scope",
+        "5 child ticket <code>PROJ-101..105</code> · 1 ticket per phase",
+        "Story points + assignee suggestion từ AI",
+        "Link Epic ↔ child + label · ready cho sprint planning"
+      ]
+    },
+
+    JIRA_FETCH: {
+      title: "Fetch from Jira via MCP — Load Backlog",
+      phase: "Step 1 · Planning", color: "plan",
+      input: [
+        "Epic ID hoặc JQL filter (vd. <code>project = PROJ AND status = \"To Do\"</code>)",
+        "Atlassian MCP đã connect (token cấu hình trong settings.json)"
+      ],
+      cli: {
+        kind: "sp", label: "ATLASSIAN MCP", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">Lấy backlog Epic PROJ-100 từ Jira về làm input cho Planner</span>\n\n<span class="bullet">●</span> <span class="tool">MCP</span>(<span class="arg">atlassian.getJiraIssue</span>) <span class="arg">— Epic</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">PROJ-100 · "Auth + dashboard MVP" · 5 child tickets</span>\n\n<span class="bullet">●</span> <span class="tool">MCP</span>(<span class="arg">atlassian.searchJiraIssuesUsingJql</span>)\n  <span class="arrow">⎿</span>  <span class="out">JQL: parent = PROJ-100 AND status != "Done"</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">5 ticket fetched với description + AC + priority</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">plans/.../jira-context.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">PROJ-101: Phase 1 — Auth &amp; user mgmt</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">PROJ-102: Phase 2 — Data layer</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">PROJ-103: Phase 3 — API endpoints</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">PROJ-104: Phase 4 — UI dashboard</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">PROJ-105: Phase 5 — Deploy &amp; observe</span>\n\n<span class="status"><span class="star">✻</span> Jira context loaded · 5 ticket · 25 SP · sẵn sàng cho Planner</span>',
+        note: "Đảm bảo source of truth là <b>Jira</b>, không phải file local. AI và team cùng làm việc trên backlog đã chốt — tránh drift."
+      },
+      output: [
+        "<code>plans/.../jira-context.md</code> · backlog Jira đã load về local",
+        "5 ticket với title + description + AC + priority + SP",
+        "Sẵn sàng cho Planner Agent đọc làm input"
       ]
     },
 
@@ -1336,6 +1381,8 @@ flowchart TB
     BRAINSTORM:  "Brainstorm Agent dẫn dắt thảo luận để mở rộng ý tưởng, đặt câu hỏi đào sâu vào target user và value proposition.",
     DOCS_INIT:   "Docs Manager Agent soạn SRS (Software Requirements Specification), wireframe low-fidelity và mockup high-fidelity từ ý tưởng đã brainstorm.",
     DESIGN_TOOL: "Hoàn thiện design system trên Figma · GG Stitch · Claude Design — chốt design tokens, color palette, typography, component library.",
+    JIRA_PUSH:   "Đẩy các task đã define từ STEP 0 lên Jira qua MCP — tạo 1 Epic chính + N child ticket cho từng phase, gắn label, assignee, story point ước lượng.",
+    JIRA_FETCH:  "Lấy task đã define từ Jira về context qua MCP — load Epic + child tickets làm input cho Planner Agent. Đảm bảo team và AI cùng làm việc trên backlog đã chốt trên Jira.",
     PLANNER:     "Planner Agent phân tích yêu cầu, lập master plan: chia thành các phase, xác định dependencies, ước lượng effort.",
     RESEARCHER:  "Researcher Agents chạy song song nghiên cứu kỹ thuật cho từng phần — chọn lib, so sánh approach, dò pattern phù hợp.",
     DOCS:        "Tổng hợp output thành 1 file <code>domain.md</code> — single source of truth cho dev và AI khi code: glossary, domain events, integration map, edge cases.",
@@ -1431,6 +1478,79 @@ flowchart TB
 
 <span class="h">## Components (24)</span>
 Button · Input · Select · Card · Modal · Toast · Tabs · Table · ...` }
+    ],
+
+    JIRA_PUSH: [
+      { file: 'Jira · Epic PROJ-100 (created via MCP)', lang: 'json', body:
+`{
+  <span class="k">"key"</span>: <span class="s">"PROJ-100"</span>,
+  <span class="k">"type"</span>: <span class="s">"Epic"</span>,
+  <span class="k">"summary"</span>: <span class="s">"Auth + dashboard MVP"</span>,
+  <span class="k">"description"</span>: <span class="s">"MVP scope · auth + 5 metric dashboard · export CSV"</span>,
+  <span class="k">"status"</span>: <span class="ok">"To Do"</span>,
+  <span class="k">"priority"</span>: <span class="s">"High"</span>,
+  <span class="k">"labels"</span>: [<span class="s">"mvp"</span>, <span class="s">"q2-2026"</span>],
+  <span class="k">"children"</span>: [
+    {
+      <span class="k">"key"</span>: <span class="s">"PROJ-101"</span>, <span class="k">"summary"</span>: <span class="s">"Phase 1 · Auth &amp; user mgmt"</span>,
+      <span class="k">"sp"</span>: <span class="n">5</span>, <span class="k">"depends_on"</span>: []
+    },
+    {
+      <span class="k">"key"</span>: <span class="s">"PROJ-102"</span>, <span class="k">"summary"</span>: <span class="s">"Phase 2 · Data layer"</span>,
+      <span class="k">"sp"</span>: <span class="n">6</span>, <span class="k">"depends_on"</span>: [<span class="s">"PROJ-101"</span>]
+    },
+    {
+      <span class="k">"key"</span>: <span class="s">"PROJ-103"</span>, <span class="k">"summary"</span>: <span class="s">"Phase 3 · API endpoints"</span>,
+      <span class="k">"sp"</span>: <span class="n">5</span>, <span class="k">"depends_on"</span>: [<span class="s">"PROJ-102"</span>]
+    },
+    {
+      <span class="k">"key"</span>: <span class="s">"PROJ-104"</span>, <span class="k">"summary"</span>: <span class="s">"Phase 4 · UI dashboard"</span>,
+      <span class="k">"sp"</span>: <span class="n">6</span>, <span class="k">"depends_on"</span>: [<span class="s">"PROJ-103"</span>]
+    },
+    {
+      <span class="k">"key"</span>: <span class="s">"PROJ-105"</span>, <span class="k">"summary"</span>: <span class="s">"Phase 5 · Deploy &amp; observe"</span>,
+      <span class="k">"sp"</span>: <span class="n">3</span>, <span class="k">"depends_on"</span>: [<span class="s">"PROJ-104"</span>]
+    }
+  ],
+  <span class="k">"totalSP"</span>: <span class="n">25</span>,
+  <span class="k">"createdBy"</span>: <span class="s">"AI Agent (atlassian-mcp)"</span>,
+  <span class="k">"createdAt"</span>: <span class="s">"2026-05-05T09:14:00Z"</span>
+}` }
+    ],
+
+    JIRA_FETCH: [
+      { file: 'plans/.../jira-context.md', lang: 'markdown', body:
+`<span class="h"># Jira Context · Epic PROJ-100</span>
+<span class="c">&lt;!-- Backlog đã chốt trên Jira · load về làm input cho Planner --&gt;</span>
+
+<span class="h">## Epic</span>
+- <span class="k">PROJ-100</span> · Auth + dashboard MVP · <span class="n">25 SP</span>
+
+<span class="h">## Child tickets (theo dependency order)</span>
+
+<span class="h">### PROJ-101 · Phase 1 — Auth &amp; user mgmt</span> · 5 SP
+<span class="c">**AC**:</span>
+- User đăng ký bằng email + password
+- Login với JWT + refresh token
+- Logout revoke refresh token
+
+<span class="h">### PROJ-102 · Phase 2 — Data layer</span> · 6 SP · depends on PROJ-101
+<span class="c">**AC**:</span>
+- Schema migration (users, sessions, items)
+- Repository pattern + Prisma client
+- Seed data cho dev
+
+<span class="h">### PROJ-103 · Phase 3 — API endpoints</span> · 5 SP · depends on PROJ-102
+<span class="c">**AC**:</span>
+- 24 endpoint theo OpenAPI spec
+- Rate limit 100 req/min/IP
+- Error envelope chuẩn (RFC 7807)
+
+<span class="h">### PROJ-104 · Phase 4 — UI dashboard</span> · 6 SP · depends on PROJ-103
+
+<span class="h">### PROJ-105 · Phase 5 — Deploy &amp; observe</span> · 3 SP · depends on PROJ-104
+
+<span class="ok">→</span> Total: <span class="n">25 SP</span> · ready cho Planner phân tích &amp; lập master plan` }
     ],
 
     PLANNER: [
