@@ -836,103 +836,101 @@ flowchart TB
   classDef operate  fill:#1A2238,stroke:#9CB7E0,stroke-width:1.5px,color:#DBE4F5
   classDef phase    fill:#101827,stroke:#26334E,stroke-width:1px,color:#A6B3CA
 
-  USER["User / Product Owner<br/>Định nghĩa yêu cầu FT-204"]:::input
+  USER["User / Product Owner<br/>Define Initial Idea"]:::input
 
-  subgraph P0["PHASE 0 · Research and Discovery"]
+  subgraph P0["STEP 0 · Project Initialization"]
     direction TB
-    DISC["Research and Discovery<br/>Sinh tài liệu định hướng theo DDD<br/>(glossary · context map · event list)"]:::discover
+    BRAINSTORM["Brainstorm Agent<br/>Discuss and Generate Ideas"]:::discover
+    DOCS_INIT["Docs Manager Agent<br/>SRS · Wireframe · Mockup"]:::discover
+    DESIGN_TOOL["Figma · GG Stitch · Claude Design<br/>Refined Product Design"]:::discover
+    BRAINSTORM --> DOCS_INIT
+    DOCS_INIT --> DESIGN_TOOL
   end
 
-  subgraph P1["PHASE 1 · Architecture and Implementation Plan"]
+  subgraph P1["STEP 1 · Planning and Documentation"]
     direction TB
-    PS["Architecture Plan<br/>Integration · service boundary · ADR"]:::plan
-    PT["Implementation Plan<br/>Task list · TDD steps"]:::plan
+    PLANNER["Planner Agent<br/>Analyze and Create Plan"]:::plan
+    RESEARCHER["Researcher Agents<br/>Parallel Technical Research"]:::plan
+    DOCS["Documentation Output<br/>Plan + Architecture + Specs"]:::plan
+    PLANNER --> RESEARCHER
+    RESEARCHER --> DOCS
   end
 
-  subgraph P2["PHASE 2 · Implementation (TDD)"]
+  subgraph P2["STEP 2 · Implementation"]
     direction TB
-    DEV["Developer Agent<br/>TDD: RED → GREEN → REFACTOR"]:::impl
-    LINT["Standard Linter<br/>ESLint · Prettier · pre-commit security"]:::impl
+    CODER["Developer Agent<br/>Write Production Code"]:::impl
+    CODE_FILES["Source Code<br/>Clean and Maintainable"]:::impl
+    CODER --> CODE_FILES
   end
 
-  subgraph P3["PHASE 3 · Testing"]
+  subgraph P3["STEP 3 · Testing"]
     direction TB
-    SBE["Specification by Example<br/>Acceptance test · Given-When-Then"]:::test
-    UIT["Unit · Integration · E2E"]:::test
-    CT["Contract Test"]:::test
+    TESTER["Tester Agent<br/>Write and Execute Tests"]:::test
+    UNIT["Unit Tests"]:::test
+    INTEG["Integration Tests"]:::test
+    E2E["E2E Tests"]:::test
+    TESTER --> UNIT
+    TESTER --> INTEG
+    TESTER --> E2E
   end
 
-  subgraph P4["PHASE 4 · Review"]
+  subgraph P4["STEP 4 · Code Review"]
     direction TB
-    CR["Code Reviewer<br/>Quality · readability · security"]:::review
-    CMP["Compliance Gate<br/>SAST · DAST · PII · License"]:::comply
+    REVIEWER["Code Reviewer Agent<br/>Quality and Security Audit"]:::review
+    REPORT["Review Report<br/>Findings and Recommendations"]:::review
+    REVIEWER --> REPORT
   end
 
-  subgraph P5["PHASE 5 · Delivery (G + K)"]
+  subgraph P5["STEP 5 · Delivery"]
     direction TB
-    PR["Commit + PR + Deploy Staging"]:::deliver
-    ROLL["[K] Gradual Rollout<br/>Canary · Feature Flag · SLO check"]:::rollout
-    SY["Glossary / ContextMap / ADR<br/>Sync and Archive"]:::deliver
+    COMMIT["Git Commit and Push"]:::deliver
+    PR_NODE["Pull Request"]:::deliver
+    DEPLOY["Deploy to Production"]:::deliver
+    COMMIT --> PR_NODE
+    PR_NODE --> DEPLOY
   end
 
-  subgraph P6["PHASE 6 · Operate (L)"]
-    direction TB
-    OPS["SLO Monitoring · Error Budget<br/>Incident → Discovery loop"]:::operate
-  end
+  USER -->|"Initial Idea"| P0
+  P0 -->|"SRS + Design Assets"| P1
+  P1 -->|"Plan and Specifications"| P2
+  P2 -->|"Source Code"| P3
+  P3 -->|"Test Results"| P4
+  P3 -.->|"Tests Fail · Fix and Re-test"| P2
+  P4 -->|"Approved"| P5
+  P4 -.->|"Issues Found · Refactor"| P2
+  P5 -.->|"Docs Update"| P1
 
-  USER -->|"Yêu cầu"| DISC
-  DISC -->|"Domain Model v0"| PS
-  PS --> PT
-  PT -->|"Plan and Specs"| DEV
-  DEV --> LINT
-  LINT -->|"Source Code"| SBE
-  SBE --> UIT
-  UIT --> CT
-  CT -->|"Test Results"| CR
-  CR --> CMP
-  CMP -->|"Approved"| PR
-  PR --> ROLL
-  ROLL -->|"100% traffic"| SY
-  SY --> OPS
-
-  CT -.->|"Tests Fail · Re-test"| DEV
-  CR -.->|"Issues Found · Refactor"| DEV
-  CMP -.->|"Compliance Block"| DEV
-  ROLL -.->|"SLO breach · Rollback"| PR
-  OPS -.->|"Incident → Research"| DISC
-  SY -.->|"Knowledge Sync"| DISC
-
-  class P0,P1,P2,P3,P4,P5,P6 phase
+  class P0,P1,P2,P3,P4,P5 phase
 
   click USER call openNode("USER")
-  click DISC call openNode("DISC")
-  click PS call openNode("PS")
-  click PT call openNode("PT")
-  click DEV call openNode("DEV")
-  click LINT call openNode("LINT")
-  click SBE call openNode("SBE")
-  click UIT call openNode("UIT")
-  click CT call openNode("CT")
-  click CR call openNode("CR")
-  click CMP call openNode("CMP")
-  click PR call openNode("PR")
-  click ROLL call openNode("ROLL")
-  click SY call openNode("SY")
-  click OPS call openNode("OPS")
+  click BRAINSTORM call openNode("BRAINSTORM")
+  click DOCS_INIT call openNode("DOCS_INIT")
+  click DESIGN_TOOL call openNode("DESIGN_TOOL")
+  click PLANNER call openNode("PLANNER")
+  click RESEARCHER call openNode("RESEARCHER")
+  click DOCS call openNode("DOCS")
+  click CODER call openNode("CODER")
+  click CODE_FILES call openNode("CODE_FILES")
+  click TESTER call openNode("TESTER")
+  click UNIT call openNode("UNIT")
+  click INTEG call openNode("INTEG")
+  click E2E call openNode("E2E")
+  click REVIEWER call openNode("REVIEWER")
+  click REPORT call openNode("REPORT")
+  click COMMIT call openNode("COMMIT")
+  click PR_NODE call openNode("PR_NODE")
+  click DEPLOY call openNode("DEPLOY")
 </pre>
   </div>
 
   <div class="legend">
     <span><i style="background:#5B9DD9"></i>User Input</span>
-    <span><i style="background:#8C7AC4"></i>Discovery</span>
-    <span><i style="background:#6B8DBF"></i>Plan</span>
+    <span><i style="background:#8C7AC4"></i>Project Initialization</span>
+    <span><i style="background:#6B8DBF"></i>Planning &amp; Docs</span>
     <span><i style="background:#5DA88C"></i>Implementation</span>
-    <span><i style="background:#C8A35A"></i>Testing</span>
-    <span><i style="background:#C77676"></i>Review</span>
-    <span><i style="background:#D38F5F"></i>Compliance</span>
+    <span><i style="background:#C8A35A"></i>Testing &amp; QA</span>
+    <span><i style="background:#C77676"></i>Code Review</span>
     <span><i style="background:#5BA3B0"></i>Delivery</span>
-    <span><i style="background:#6FB3B8"></i>Rollout</span>
-    <span><i style="background:#9CB7E0"></i>Operate</span>
   </div>
 
   <!-- ── PHILOSOPHY banner ────────────────────────── -->
@@ -1009,314 +1007,346 @@ flowchart TB
     deliver:  '#5BA3B0'
   };
 
+
+  // ────────────── Node detail data ──────────────
   const NODES = {
     USER: {
-      title: "User / Product Owner — Define Requirement",
-      phase: "User Input", color: "input",
+      title: "User / Product Owner — Define Initial Idea",
+      phase: "Input", color: "input",
       input: [
-        "Pain point: 18% support ticket trong tháng là về refund",
-        "Nghiệp vụ thô từ Finance: refund 30 ngày, >5M cần approve",
-        "Ràng buộc compliance từ Legal"
+        "Ý tưởng nghiệp vụ thô (chat, voice note, slide)",
+        "Pain point từ user / market need",
+        "Ràng buộc business hoặc compliance"
       ],
       cli: null,
       output: [
-        "Jira ticket <code>FT-204</code> với acceptance criteria",
-        "Stakeholder list · success metric (giảm 50% ticket refund)"
+        "<code>requirements-brief.md</code> · ý tưởng và mục tiêu ban đầu",
+        "Stakeholder list + priority sơ bộ"
       ]
     },
-    DISC: {
-      title: "Research and Discovery — sinh tài liệu domain.md",
-      phase: "Phase 0 · Research", color: "discover",
+
+    BRAINSTORM: {
+      title: "Brainstorm Agent — Discuss & Generate Ideas",
+      phase: "Step 0 · Project Init", color: "discover",
       input: [
-        "Ticket FT-204 + acceptance criteria",
-        "Người am hiểu nghiệp vụ: An (Finance Lead), Linh (Customer Service Lead)",
-        "<code>docs/domain.md</code> hiện tại của service Billing (nếu có)"
+        "Ý tưởng thô từ Product Owner",
+        "Domain context · target user persona"
       ],
       cli: {
-        kind: "sp", label: "SUPERPOWERS + OPSX", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:brainstorm Research nhanh cho FT-204 (Refund flow)</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:brainstorming</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill · interview mode</span>\n\n<span class="bullet">●</span> <span class="tool">Research Session</span> <span class="arg">(với An + Linh)</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Events: RefundRequested · RefundApproved · RefundRejected</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Events: RefundCompleted · RefundFailed</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Commands: RequestRefund · ApproveRefund</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Policies: 30-day-window · manager-approval-&gt;5M</span>\n\n<span class="bullet">●</span> <span class="tool">Language Check</span> <span class="arg">(hỏi An)</span>\n  <span class="arrow">⎿</span>  <span class="out">[An] Reversal = huỷ giao dịch chưa settle</span>\n  <span class="arrow">⎿</span>  <span class="out">[An] Refund = trả tiền sau settle — KHÁC NHAU</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Tách 2 thuật ngữ riêng trong glossary section</span>\n\n<span class="pmt">&gt;</span> <span class="you">/opsx:propose Update docs/domain.md với research output của FT-204</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">opsx:propose</span>) <span class="arg">— experimental, gộp output 1 file</span>\n  <span class="arrow">⎿</span>  <span class="out">Tạo proposal: openspec/changes/ft-204-refund-research/</span>\n\n<span class="bullet">●</span> <span class="tool">Edit</span>(<span class="arg">docs/domain.md</span>) <span class="arg">— single source of truth</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Section 1 · Glossary: 4 thuật ngữ mới</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Section 2 · Domain Events: 5 events + 2 commands + 3 policies</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Section 3 · Integration Map: Billing ↔ Identity · Notification</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Section 4 · Edge cases: partial refund · cross-currency · AmEx 3DS</span>\n\n<span class="status"><span class="star">✻</span> Research done · 1 file domain.md · 4 sections · ready cho AI làm system prompt</span>',
-        note: "Output gộp thành <b>1 file <code>docs/domain.md</code></b> với 4 section (Glossary · Events · Integration · Edge cases). Dev đọc 1 file là đủ, AI load 1 file làm system prompt khi code — không phải đi qua 3 file riêng."
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:brainstorm Mở rộng ý tưởng từ requirements-brief</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:brainstorming</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Brainstorm Session</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Target user: 3 segment</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Value proposition: 5 bullet</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Risk &amp; assumption: 4 item</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">docs/idea-brainstorm.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Wrote 87 lines</span>\n\n<span class="status"><span class="star">✻</span> Brainstorm done · 12 ý tưởng · 3 segment user xác định</span>'
       },
       output: [
-        "<code>docs/domain.md</code> — single source of truth (4 section gộp)",
-        "Section 1: Glossary · 4 thuật ngữ mới · phân biệt <code>Refund</code> vs <code>Reversal</code>",
-        "Section 2: Domain Events · 5 events với payload + commands + policies",
-        "Section 3: Integration Map · Billing ↔ Identity (ACL) + Notification (Conformist)",
-        "Section 4: Edge cases · partial refund · cross-currency FX · AmEx 3DS timeout"
+        "<code>docs/idea-brainstorm.md</code> · biên bản brainstorm",
+        "Target user persona + value proposition",
+        "Risk &amp; assumption ghi nhận"
       ]
     },
-    PS: {
-      title: "Architecture Plan — service boundary · integration · SLA",
-      phase: "Phase 1 · Plan", color: "plan",
+
+    DOCS_INIT: {
+      title: "Docs Manager Agent — SRS / Wireframe / Mockup",
+      phase: "Step 0 · Project Init", color: "discover",
       input: [
-        "Tài liệu Research (events · glossary · context map)",
-        "Yêu cầu phi chức năng (SLA · throughput · compliance)"
+        "Idea brainstorm + value proposition",
+        "Target user flow chính"
       ],
       cli: {
-        kind: "os", label: "OPENSPEC", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/openspec:propose FT-204 strategic integration plan</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">openspec/specs/context-map.yaml, glossary.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loaded discovery artifacts</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">changes/ft-204-refund-strategic/proposal.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Why · What · Impact</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">changes/ft-204-refund-strategic/design.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">ACL: BillingCustomerAdapter</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Event topic: billing.refund.v1 · SLA &lt; 24h</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Compensating action on Identity outage</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">adr/0042-notification-conformist.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">ADR captured</span>\n\n<span class="status"><span class="star">✻</span> Strategic plan ready · 3 artifacts · 1 ADR</span>'
+        kind: "os", label: "OPENSPEC", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/openspec:propose Tạo SRS + wireframe cho ý tưởng đã brainstorm</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">docs/idea-brainstorm.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loaded 87 lines</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">docs/srs.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Functional req · 14 items · Non-functional · 8 items</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">docs/wireframes/</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">5 màn hình low-fidelity (SVG)</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">docs/mockups/</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">5 màn hình high-fidelity với content thực</span>\n\n<span class="status"><span class="star">✻</span> SRS · 5 wireframes · 5 mockups · ready cho Design Tool</span>'
       },
       output: [
-        "<code>changes/ft-204-refund-strategic/</code>",
-        "<code>adr/0042-notification-conformist.md</code>",
-        "Integration contract: Identity API endpoints cần thiết",
-        "Event topic: <code>billing.refund.v1</code>"
+        "<code>docs/srs.md</code> · functional + non-functional requirements",
+        "<code>docs/wireframes/</code> · 5 wireframe low-fidelity",
+        "<code>docs/mockups/</code> · 5 mockup high-fidelity"
       ]
     },
-    PT: {
-      title: "Implementation Plan — task list · TDD steps",
-      phase: "Phase 1 · Plan", color: "plan",
+
+    DESIGN_TOOL: {
+      title: "Figma · GG Stitch · Claude Design — Refined Product Design",
+      phase: "Step 0 · Project Init", color: "discover",
       input: [
-        "Architecture Plan đã chốt + ADR",
-        "Tài liệu Research (events, glossary để tham chiếu khi đặt tên)"
+        "Wireframes + mockups từ Docs Manager",
+        "Brand guideline (nếu có)"
       ],
       cli: {
-        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:writing-plans FT-204 tactical implementation</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:writing-plans</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">changes/ft-204-refund-strategic/design.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loaded strategic plan + ADR-0042</span>\n\n<span class="bullet">●</span> <span class="tool">Aggregate Design</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out"><span class="key">RefundRequest</span> (NEW) — invariants:</span>\n  <span class="arrow">⎿</span>  <span class="out">  • amount &gt; 0 ∧ amount ≤ payment.amount</span>\n  <span class="arrow">⎿</span>  <span class="out">  • order.settledAt ≤ 30 days</span>\n  <span class="arrow">⎿</span>  <span class="out">  state: Pending → Approved/Rejected → Completed/Failed</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">plan.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">12 tasks · est 13 SP</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">plan-review-gate</span>)\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">Generated review-checklist.md</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">Status: PENDING — awaiting human OK</span>\n\n<span class="status"><span class="star">✻</span> Plan saved · gate <span style="color:#E5B257">PENDING</span> · cannot execute yet</span>',
-        note: "<b>plan-review-gate</b> chặn không cho execute cho tới khi developer tick checklist và đặt <code>Overall Decision: OK</code> trong file review."
+        kind: "sp", label: "DESIGN", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">Tạo design system + component library trên Figma</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">docs/mockups/</span>)\n  <span class="arrow">⎿</span>  <span class="out">5 mockup high-fidelity</span>\n\n<span class="bullet">●</span> <span class="tool">Figma</span>(<span class="arg">create design system</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Color palette · 12 token · light/dark</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Typography · 8 scale · IBM Plex + JetBrains Mono</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Component library · 24 component (button, card, modal, ...)</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">docs/design-system.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Tokens + spacing + radius + shadow</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">design/figma-link.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">https://www.figma.com/file/...</span>\n\n<span class="status"><span class="star">✻</span> Design system ready · 24 component · ready cho Implementation</span>'
       },
       output: [
-        "<code>plan.md</code> chi tiết với 12 task",
-        "Mỗi task có acceptance test rõ ràng (input/output)",
-        "<code>tasks.md</code> trong OpenSpec change",
-        "<b>Gate:</b> chờ <code>plan-review-gate</code> approve"
+        "<code>design/figma-link.md</code> · link Figma file",
+        "<code>docs/design-system.md</code> · tokens + typography + spacing",
+        "Component library 24 component reusable"
       ]
     },
-    DEV: {
-      title: "Developer Agent — Implementation with TDD",
-      phase: "Phase 2 · Implementation", color: "impl",
+
+    PLANNER: {
+      title: "Planner Agent — Analyze & Create Plan",
+      phase: "Step 1 · Planning", color: "plan",
       input: [
-        "<code>plan.md</code> đã APPROVED qua plan-review-gate",
-        "Project folder convention (sẵn có) + glossary để tham chiếu naming"
+        "SRS + design assets từ Step 0",
+        "Tech stack đã chốt (nếu có)"
       ],
       cli: {
-        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:executing-plans plan.md</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:executing-plans</span>)\n  <span class="arrow">⎿</span>  <span class="out">Verified review-checklist OK · gate passed</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">plan.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">12 tasks loaded · starting task 1/12</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:test-driven-development</span>)\n  <span class="arrow">⎿</span>  <span class="err">RED</span>   <span class="out">write failing test: amount &gt; payment.amount</span>\n  <span class="arrow">⎿</span>  <span class="ok">GREEN</span> <span class="out">implement RefundRequest aggregate</span>\n  <span class="arrow">⎿</span>  <span class="key">REFACTOR</span> <span class="out">extract value object Money</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">src/billing/domain/refund_request.py</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">94 lines · invariants enforced</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">tests/billing/domain/test_refund_request.py</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">12 tests · all green</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-apply</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Marked task 1/12 done in tasks.md</span>\n\n<span class="status"><span class="star">✻</span> Task 1/12 complete · 11 remaining</span>',
-        note: "Có thể dùng <code>subagent-driven-development</code> cho các task song song không phụ thuộc."
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:writing-plans Tạo master plan từ SRS</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:writing-plans</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">docs/srs.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loaded 14 functional + 8 non-functional</span>\n\n<span class="bullet">●</span> <span class="tool">Plan Analysis</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Chia thành 5 phase · est 25 SP</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Phase 1 (auth) phải xong trước Phase 2 (data)</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Identify 3 area cần Researcher đào sâu</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">plans/2026-05-05/plan.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Master plan · 5 phase · dependencies graph</span>\n\n<span class="status"><span class="star">✻</span> Plan saved · spawn Researcher cho 3 area unknown</span>'
       },
       output: [
-        "<code>src/billing/domain/refund_request.py</code>",
-        "<code>src/billing/application/refund_service.py</code>",
-        "<code>src/billing/infrastructure/refund_repo.py</code>",
-        "<code>src/billing/interface/refund_api.py</code>",
-        "Tasks 1→12 marked done trong <code>tasks.md</code>"
+        "<code>plans/{date}-{slug}/plan.md</code> · master plan",
+        "Phase breakdown + dependencies graph",
+        "Research questions cho Researcher Agents"
       ]
     },
-    LINT: {
-      title: "Standard Linter — pre-commit hook",
-      phase: "Phase 2 · Implementation", color: "impl",
+
+    RESEARCHER: {
+      title: "Researcher Agents — Parallel Technical Research",
+      phase: "Step 1 · Planning", color: "plan",
       input: [
-        "Source code thay đổi · staged files",
-        "Cấu hình <code>.eslintrc</code> · <code>.prettierrc</code> · <code>.gitleaks.toml</code>"
+        "Research questions từ Planner",
+        "Codebase hiện tại (nếu brownfield)"
       ],
       cli: {
-        kind: "sp", label: "PRE-COMMIT HOOK", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">git commit -m "feat: add refund flow"</span>\n\n<span class="bullet">●</span> <span class="tool">Hook</span>(<span class="arg">PreToolUse · pre-commit</span>)\n  <span class="arrow">⎿</span>  <span class="out">Running .claude/hooks/pre-commit.sh</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">npm run lint</span>) <span class="arg">— ESLint + Prettier</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">No style issue · 0 warning</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">gitleaks protect --staged</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">No secret leaked</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">pytest --collect-only</span>) <span class="arg">— smoke check</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">All tests collectible · no syntax error</span>\n\n<span class="status"><span class="star">✻</span> Linter passed · commit allowed</span>',
-        note: "Linter chuẩn — không có DDD-specific rule (boundary check, glossary drift). Đây chỉ là gate cơ bản: style + secret + syntax."
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:dispatching-parallel-agents Research 3 area song song</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:dispatching-parallel-agents</span>)\n  <span class="arrow">⎿</span>  <span class="out">Spawn 3 subagent song song</span>\n\n<span class="bullet">●</span> <span class="tool">Subagent 1</span>(<span class="arg">research auth strategies</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">JWT vs session vs OAuth — chọn JWT + refresh token</span>\n\n<span class="bullet">●</span> <span class="tool">Subagent 2</span>(<span class="arg">research data sync pattern</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Polling vs WebSocket vs SSE — chọn SSE cho UX này</span>\n\n<span class="bullet">●</span> <span class="tool">Subagent 3</span>(<span class="arg">research deploy target</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Vercel vs Cloudflare Workers — chọn Vercel · cost &amp; DX</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">plans/.../research/</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">3 research report markdown</span>\n\n<span class="status"><span class="star">✻</span> 3 area researched · all decisions made</span>'
       },
       output: [
-        "Linter pass/fail kết quả · stdout",
-        "Commit được phép (hoặc bị chặn) · không bypass <code>--no-verify</code>"
+        "<code>plans/.../research/researcher-01-report.md</code>",
+        "<code>plans/.../research/researcher-02-report.md</code>",
+        "<code>plans/.../research/researcher-03-report.md</code>"
       ]
     },
-    SBE: {
-      title: "Specification by Example (acceptance test)",
-      phase: "Phase 3 · Test", color: "test",
+
+    DOCS: {
+      title: "Documentation Output — Plan + Architecture + Specs",
+      phase: "Step 1 · Planning", color: "plan",
       input: [
-        "Acceptance criteria từ FT-204",
-        "Glossary để tham chiếu naming (không bắt buộc)"
+        "Master plan từ Planner",
+        "Research reports từ Researcher Agents"
       ],
       cli: {
-        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:test-driven-development Refund acceptance scenarios</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:test-driven-development</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">docs/glossary.md</span>) <span class="arg">[reference]</span>\n  <span class="arrow">⎿</span>  <span class="out">Tham chiếu thuật ngữ khi đặt tên scenario</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">features/refund.feature</span>)\n  <span class="arrow">⎿</span>  <span class="out">Feature: Refund</span>\n  <span class="arrow">⎿</span>  <span class="out">  Scenario: Customer requests refund within window</span>\n  <span class="arrow">⎿</span>  <span class="out">    Given an Order settled 10 days ago</span>\n  <span class="arrow">⎿</span>  <span class="out">    When the Customer requests a Refund of 2,000,000 VND</span>\n  <span class="arrow">⎿</span>  <span class="out">    Then the request is created with status <span class="key">Pending</span></span>\n\n  <span class="arrow">⎿</span>  <span class="out">  Scenario: Refund above threshold needs Manager Approval</span>\n  <span class="arrow">⎿</span>  <span class="out">    When the Customer requests a Refund of 8,000,000 VND</span>\n  <span class="arrow">⎿</span>  <span class="out">    Then the request status is <span class="key">PendingApproval</span></span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">features/steps/refund_steps.py</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">9 step definitions</span>\n\n<span class="status"><span class="star">✻</span> 5 scenarios · 9 steps</span>'
+        kind: "os", label: "OPENSPEC", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/openspec:propose Tổng hợp plan + research thành full documentation</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-propose</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Read</span>(<span class="arg">plans/.../plan.md, research/*.md</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loaded master plan + 3 research reports</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">plans/.../phase-01-auth.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Phase 1 detail · context · todo · success criteria</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">docs/system-architecture.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Component diagram · data flow · API contracts</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">plan-review-gate</span>)\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">Generated review-checklist.md · status PENDING</span>\n\n<span class="status"><span class="star">✻</span> Docs ready · gate PENDING · awaiting human OK</span>',
+        note: "<b>plan-review-gate</b> chặn execute cho tới khi developer tick checklist + đặt <code>Overall Decision: OK</code>."
       },
       output: [
-        "<code>features/refund.feature</code> · 5 scenario",
-        "Step definitions skeleton",
-        "QA/PO không biết code vẫn đọc và review được"
+        "<code>plans/.../phase-XX-*.md</code> · chi tiết từng phase",
+        "<code>docs/system-architecture.md</code> · component + data flow + API contracts",
+        "<code>review-checklist.md</code> · gate awaiting human OK"
       ]
     },
-    UIT: {
-      title: "Unit · Integration · E2E Tests",
-      phase: "Phase 3 · Test", color: "test",
+
+    CODER: {
+      title: "Developer Agent — Write Production Code",
+      phase: "Step 2 · Implementation", color: "impl",
       input: [
-        "Source code + feature files",
-        "Test fixtures &amp; sandbox env"
+        "Plan + phase docs đã APPROVED qua plan-review-gate",
+        "Architecture + API contracts"
       ],
       cli: {
-        kind: "sp", label: "TEST RUNNER", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">npm run test:all</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">jest --coverage</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">unit · domain/refund_request.py     34 passed</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">unit · application/refund_service.py 18 passed</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">integration · repo + db             12 passed</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">behave features/</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">bdd · refund.feature                 9 passed</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">playwright test e2e/</span>)\n  <span class="arrow">⎿</span>  <span class="err">✗</span> <span class="out">e2e · checkout → refund flow      1 FAILED</span>\n  <span class="arrow">⎿</span>  <span class="err">  ✗</span> <span class="out">partial refund: amount mismatch in event payload</span>\n\n<span class="bullet">●</span> <span class="tool">Coverage</span>\n  <span class="arrow">⎿</span>  <span class="out">RefundRequest: <span class="ok">96%</span> · Payment: <span class="ok">88%</span> · Order: <span class="ok">91%</span></span>\n\n<span class="status" style="color:#E36471"><span class="star" style="color:#E36471">✗</span> 73 passed · 1 failed · loop back to Developer</span>',
-        note: "Test fail → loop arrow <b>3 → 2</b>: dev fix payload mapping rồi re-run."
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:executing-plans plans/.../phase-01-auth.md</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:executing-plans</span>)\n  <span class="arrow">⎿</span>  <span class="out">Verified plan-review-gate OK · execute allowed</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:test-driven-development</span>)\n  <span class="arrow">⎿</span>  <span class="err">RED</span>   <span class="out">write failing test for JWT validation</span>\n  <span class="arrow">⎿</span>  <span class="ok">GREEN</span> <span class="out">implement validateToken()</span>\n  <span class="arrow">⎿</span>  <span class="key">REFACTOR</span> <span class="out">extract TokenError type</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">src/auth/jwt.ts</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">120 lines · all tests green</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">src/auth/middleware.ts</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">68 lines · tested</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">tsc --noEmit</span>) <span class="arg">— compile check</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">No type error</span>\n\n<span class="status"><span class="star">✻</span> Phase 1/5 task 1/8 complete · 7 task remaining</span>'
       },
       output: [
-        "<code>coverage-by-aggregate.json</code>",
-        "<code>test-results.junit.xml</code>",
-        "Loop arrow <b>Tests Fail → Re-test</b> kích hoạt nếu fail"
+        "<code>src/auth/*.ts</code> · auth module hoàn chỉnh",
+        "Tests đi kèm pass green",
+        "Compile check pass · ready cho Tester Agent"
       ]
     },
-    CT: {
-      title: "Contract Test giữa Bounded Contexts",
-      phase: "Phase 3 · Test", color: "test",
+
+    CODE_FILES: {
+      title: "Source Code — Clean & Maintainable",
+      phase: "Step 2 · Implementation", color: "impl",
       input: [
-        "Event schemas: <code>RefundRequested</code>, <code>RefundCompleted</code>",
-        "Consumer expectations từ Notification context"
+        "Output từ Developer Agent",
+        "Coding standard của project"
       ],
-      cli: {
-        kind: "sp", label: "PACT", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">npm run test:contract</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">pact verify --provider Billing</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading pacts from broker…</span>\n\n<span class="bullet">●</span> <span class="tool">Contract</span>(<span class="arg">Billing → Notification</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">RefundCompleted: required fields match</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">RefundFailed: required fields match</span>\n\n<span class="bullet">●</span> <span class="tool">Contract</span>(<span class="arg">Billing → Identity (ACL adapter)</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">CustomerVerified response shape OK</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">pacts/billing-*.json</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">3 contracts published to broker</span>\n\n<span class="status"><span class="star">✻</span> All contracts compatible · safe to deploy</span>'
-      },
+      cli: null,
       output: [
-        "<code>pacts/billing-notification.json</code>",
-        "<code>pacts/billing-identity.json</code>",
-        "Đảm bảo deploy không làm vỡ context khác"
+        "<code>src/**/*.{ts,py,go}</code> · production source code",
+        "<code>src/api/*</code> · endpoints theo contract",
+        "<code>migrations/*.sql</code> · DB migrations",
+        "<code>config/*</code> · configuration files",
+        "Mỗi file &lt; 200 LOC · clean · modular"
       ]
     },
-    CR: {
-      title: "Code Reviewer — Quality &amp; Security",
-      phase: "Phase 4 · Review", color: "review",
+
+    TESTER: {
+      title: "Tester Agent — Write & Execute Tests",
+      phase: "Step 3 · Testing", color: "test",
       input: [
-        "PR diff đầy đủ",
-        "Test results · coverage"
+        "Source code từ Step 2",
+        "Acceptance criteria từ SRS"
       ],
       cli: {
-        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:requesting-code-review PR #1287</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:requesting-code-review</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Task</span>(<span class="arg">subagent: superpowers:code-reviewer</span>)\n  <span class="arrow">⎿</span>  <span class="out">Spawned · running quality + security audit</span>\n\n<span class="bullet">●</span> <span class="tool">Findings</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">No SQL injection (prepared stmts everywhere)</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">refund_service.py:67 — race condition possible</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">suggest: optimistic lock on Payment.version</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">stripe_key hard-coded in test fixture</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">PII redaction in logs verified</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">review-report.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Posted as PR #1287 review comments</span>\n\n<span class="status"><span class="star">✻</span> 2 issues · 0 critical · fix before merge</span>'
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:test-driven-development Tạo test suite đầy đủ</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:test-driven-development</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">src/**/*.test.ts</span>) <span class="arg">— unit tests</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">52 unit tests · 96% coverage</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">tests/integration/**</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">14 integration test · DB + external API</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">tests/e2e/**</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">8 E2E test · main user flows</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">npm run test:all</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">74 passed · 0 failed</span>\n\n<span class="status"><span class="star">✻</span> Test suite complete · all green · ready cho Code Review</span>',
+        note: "Fail test → loop ngược về Step 2 Implementation, dev fix code rồi re-test."
       },
       output: [
-        "<code>review-report.md</code>",
-        "GitHub PR comments với line-level findings",
-        "Issues nhẹ → fix trước khi merge"
+        "<code>**/*.test.{ts,py}</code> · 52 unit test",
+        "<code>tests/integration/**</code> · 14 integration test",
+        "<code>tests/e2e/**</code> · 8 E2E test",
+        "<code>coverage/lcov-report/</code> · coverage report",
+        "<code>plans/reports/tester-*.md</code> · execution summary"
       ]
     },
-    CMP: {
-      title: "Compliance &amp; Security Gate",
-      phase: "Phase 4 · Review", color: "comply",
+
+    UNIT: {
+      title: "Unit Tests",
+      phase: "Step 3 · Testing", color: "test",
       input: [
-        "PR diff + dependency manifest",
-        "Compliance ruleset: PCI · GDPR · internal-policy"
+        "Source code (function/class)",
+        "Test framework (Jest, Vitest, pytest...)"
       ],
-      cli: {
-        kind: "sp", label: "CI · COMPLIANCE", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">npm run security:all</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">snyk test --severity-threshold=high</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">SAST · 0 high · 2 medium (acceptable)</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">semgrep --config p/owasp-top-10</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">No OWASP Top-10 finding</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">syft packages dir:. -o cyclonedx-json</span>) <span class="arg">— SBOM</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">SBOM generated · 184 dependencies tracked</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">license-checker --failOn GPL</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">All licenses MIT/Apache/BSD compatible</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">gitleaks detect</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">No secret/token leaked</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:requesting-code-review --focus pii-pci</span>)\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">refund_api.py:61 logs <span class="key">customer.email</span> in plain</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">PII redaction required (GDPR Article 32)</span>\n\n<span class="status" style="color:#FBBF24"><span class="star" style="color:#FBBF24">⚠</span> 1 PII finding · block PR · fix required</span>',
-        note: "Critical/PII finding <b>block</b> PR merge. Audit log lưu vào S3 với object lock 7 năm cho compliance audit."
-      },
+      cli: null,
       output: [
-        "<code>security-report.json</code> · SAST + DAST + license + secret",
-        "<code>sbom.cdx.json</code> · SBOM CycloneDX",
-        "Audit trail trên S3 (object-lock 7 năm)",
-        "PR comment với line-level finding"
+        "<code>**/*.test.{ts,py}</code> đi kèm với source",
+        "Cover: business logic + edge cases + error path",
+        "Mỗi test &lt; 30 dòng · isolated · deterministic"
       ]
     },
-    DMR: {
-      title: "Domain Model Reviewer (DDD-specific)",
-      phase: "Phase 4 · Review", color: "review",
+
+    INTEG: {
+      title: "Integration Tests",
+      phase: "Step 3 · Testing", color: "test",
       input: [
-        "PR diff + glossary + context map",
-        "Aggregate design từ Tactical Plan"
+        "API endpoints + DB layer",
+        "Test fixtures + sandbox env"
       ],
-      cli: {
-        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:requesting-code-review --focus domain-model</span>\n\n<span class="bullet">●</span> <span class="tool">Task</span>(<span class="arg">subagent: domain-model-reviewer</span>)\n  <span class="arrow">⎿</span>  <span class="out">Reading glossary.md, context-map.yaml, PR diff…</span>\n\n<span class="bullet">●</span> <span class="tool">Aggregate Boundary</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">RefundRequest stands alone · no Order coupling</span>\n\n<span class="bullet">●</span> <span class="tool">ACL Integrity</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">refund_service.py:88 imports <span class="key">IdentityDTO</span> directly</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">suggest: introduce <span class="key">CustomerSummary</span> via Billing ACL</span>\n\n<span class="bullet">●</span> <span class="tool">Language Drift</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">0 terms outside Ubiquitous Language</span>\n\n<span class="bullet">●</span> <span class="tool">Model Health</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">Aggregate trending "anemic" — logic in service</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">move <span class="key">canApprove()</span> into RefundRequest</span>\n\n<span class="bullet">●</span> <span class="tool">Write</span>(<span class="arg">domain-model-health.json</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">2 concerns · 1 may trigger Loop F</span>\n\n<span class="status" style="color:#C084FC"><span class="star" style="color:#C084FC">✻</span> Decision: fix in place OR Loop F (4 → 1)</span>',
-        note: "<b>Loop F · Refactor toward Deeper Insight</b>: nếu mô hình sai bản chất → quay về Phase 1 chỉnh tactical design, không chỉ patch code."
-      },
+      cli: null,
       output: [
-        "<code>domain-model-health.json</code>",
-        "<code>refactor-proposals/</code>",
-        "Quyết định: fix nhẹ tại chỗ HOẶC kích Loop F (4 → 1)"
+        "<code>tests/integration/**</code>",
+        "Test với DB thật (testcontainers)",
+        "Test với external API (mocked hoặc sandbox)"
       ]
     },
-    PR: {
-      title: "Commit + PR + Deploy",
-      phase: "Phase 5 · Delivery", color: "deliver",
+
+    E2E: {
+      title: "End-to-End Tests",
+      phase: "Step 3 · Testing", color: "test",
       input: [
-        "Code đã APPROVED bởi cả 2 reviewer",
-        "OpenSpec change đầy đủ"
+        "User flow chính (login, checkout...)",
+        "Browser automation (Playwright, Cypress)"
       ],
-      cli: {
-        kind: "sp", label: "SUPERPOWERS", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/commit-commands:commit-push-pr</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">commit-commands:commit-push-pr</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">git commit · git push · gh pr create</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out"><span class="str">feat(billing): add refund request aggregate (FT-204)</span></span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">PR <span class="key">#1287</span> opened · linked OpenSpec + ADR-0042</span>\n\n<span class="bullet">●</span> <span class="tool">CodeBuild</span>(<span class="arg">build &amp; push image</span>)\n  <span class="arrow">⎿</span>  <span class="out">docker build · pytest · pact verify</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">push ECR · <span class="key">billing:9c4f1a2</span> · scan: 0 critical</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">npx cdk diff ddd-platform-staging/BillingStack/*</span>)\n  <span class="arrow">⎿</span>  <span class="out">Stack <span class="key">BillingServiceStack</span></span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">TaskDefinition · billing:9c4f1a2</span>\n  <span class="arrow">⎿</span>  <span class="ok">~</span> <span class="out">EnvVar REFUND_THRESHOLD = 5000000</span>\n  <span class="arrow">⎿</span>  <span class="out">Stack <span class="key">BillingDatabaseStack</span> · no changes</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">npx cdk deploy ddd-platform-staging/BillingStack/* --require-approval=never</span>)\n  <span class="arrow">⎿</span>  <span class="out">BillingDatabaseStack    | <span class="ok">no changes</span></span>\n  <span class="arrow">⎿</span>  <span class="out">BillingServiceStack     | <span class="ok">UPDATE_COMPLETE</span> · 2/2 task healthy</span>\n  <span class="arrow">⎿</span>  <span class="out">BillingObservabilityStack | <span class="ok">UPDATE_COMPLETE</span> · 3 alarms armed</span>\n  <span class="arrow">⎿</span>  <span class="out">EventBridge rule: <span class="key">billing.refund.v1</span> active</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">smoke test on staging.billing.internal · OK</span>\n\n<span class="bullet">●</span> <span class="tool">Manual Approval Gate</span> <span class="arg">(prod)</span>\n  <span class="arrow">⎿</span>  <span class="warn">⏸</span>  <span class="out">awaiting <code>cdk deploy ddd-platform-prod/BillingStack/*</code></span>\n  <span class="arrow">⎿</span>  <span class="warn">⏸</span>  <span class="out">approver: @an · SLO check passed · cdk diff reviewed</span>\n\n<span class="status"><span class="star">✻</span> PR #1287 · staging deployed via CDK · prod gate pending</span>'
-      },
+      cli: null,
       output: [
-        "Commit conventional: <code>feat(billing): ...</code>",
-        "PR <code>#1287</code> với link OpenSpec + ADR",
-        "Deploy staging, chờ approval cho prod"
+        "<code>tests/e2e/**</code>",
+        "Test luồng từ click button đến kết quả cuối",
+        "Screenshot + video khi fail để debug"
       ]
     },
-    ROLL: {
-      title: "Gradual Rollout — Canary · Feature Flag · SLO Gate",
-      phase: "Phase 5.5 · Rollout", color: "rollout",
+
+    REVIEWER: {
+      title: "Code Reviewer Agent — Quality & Security Audit",
+      phase: "Step 4 · Code Review", color: "review",
       input: [
-        "Image đã deploy staging với smoke test pass",
-        "SLO definition: P95 &lt; 500ms · error rate &lt; 0.1% · refund completion &gt; 99%"
+        "Source code + test results",
+        "Coding standards + security checklist"
       ],
       cli: {
-        kind: "sp", label: "CODEDEPLOY + LAUNCHDARKLY", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:executing-plans rollout.md</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">aws codedeploy create-deployment --canary 5%</span>)\n  <span class="arrow">⎿</span>  <span class="out">Deployment dpl-9c4f1a2 · routing 5% traffic to v47</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">ld-cli flag enable refund-v2 --segment canary-5pct</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Feature flag ON for canary segment</span>\n\n<span class="bullet">●</span> <span class="tool">SLO Gate</span> <span class="arg">(15 min observation)</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">P95 latency:        342ms (target &lt; 500)</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Error rate:         0.04% (target &lt; 0.1%)</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Refund completion:  99.6% (target &gt; 99%)</span>\n\n<span class="bullet">●</span> <span class="tool">Promote</span>(<span class="arg">5% → 25% → 50% → 100%</span>)\n  <span class="arrow">⎿</span>  <span class="out">25% · 15min · all SLO green</span>\n  <span class="arrow">⎿</span>  <span class="out">50% · 15min · all SLO green</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">100% · v47 fully deployed</span>\n\n<span class="status"><span class="star">✻</span> Rollout complete · 1h 12m · 0 SLO breach · ready for archive</span>',
-        note: "<b>Auto-rollback</b>: nếu SLO breach trong 15 phút quan sát → CodeDeploy revert + LaunchDarkly tắt flag, không cần human input."
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/superpowers:requesting-code-review Audit code chất lượng + security</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:requesting-code-review</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Task</span>(<span class="arg">subagent: code-reviewer</span>)\n  <span class="arrow">⎿</span>  <span class="out">Spawned · running quality + security audit</span>\n\n<span class="bullet">●</span> <span class="tool">Findings</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">No SQL injection · prepared statements OK</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">auth.ts:67 — race condition khi 2 request cùng refresh</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">suggest: mutex lock trên refresh token</span>\n  <span class="arrow">⎿</span>  <span class="warn">⚠</span>  <span class="out">Performance: query N+1 trong list endpoint</span>\n  <span class="arrow">⎿</span>  <span class="warn">→</span>  <span class="out">suggest: dùng JOIN hoặc DataLoader</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">PII redaction trong logs OK</span>\n\n<span class="status"><span class="star">✻</span> 2 issues · 0 critical · refactor required trước merge</span>',
+        note: "Issue → loop ngược về Step 2 để Developer refactor + re-test."
       },
       output: [
-        "Deployment id <code>dpl-9c4f1a2</code> · 100% traffic v47",
-        "<code>rollout-report.json</code> · SLO snapshot từng giai đoạn",
-        "Feature flag <code>refund-v2</code> @ 100%",
-        "Auto-rollback config sẵn sàng cho 24h kế tiếp"
+        "Findings classified theo severity (critical · high · medium · low)",
+        "Suggestions cụ thể cho từng issue",
+        "Verdict: APPROVED / REFACTOR REQUIRED"
       ]
     },
-    SY: {
-      title: "Glossary / Context-Map / ADR Sync &amp; Archive",
-      phase: "Phase 5 · Delivery", color: "deliver",
+
+    REPORT: {
+      title: "Review Report — Findings & Recommendations",
+      phase: "Step 4 · Code Review", color: "review",
       input: [
-        "OpenSpec change đã merged",
-        "Glossary delta + ADR mới"
+        "Findings từ Code Reviewer Agent",
+        "Severity classification"
       ],
-      cli: {
-        kind: "os", label: "OPENSPEC", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">/openspec:archive ft-204-refund-strategic</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">openspec-archive-change</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">mv openspec/changes/ft-204-* openspec/archive/</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Change archived</span>\n\n<span class="bullet">●</span> <span class="tool">Edit</span>(<span class="arg">openspec/specs/billing/</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Specs delta applied</span>\n\n<span class="bullet">●</span> <span class="tool">Edit</span>(<span class="arg">docs/domain.md</span>) <span class="arg">— single source of truth</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Section 1 Glossary: 4 terms · version v3.2 → <span class="key">v3.3</span></span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Section 2 Events: Billing publishes 4 events</span>\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">Section 3 Integration: Identity ACL · Notification Conformist</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">npm run schema:publish billing.refund.v1</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Registered to schema registry</span>\n\n<span class="status"><span class="star">✻</span> Knowledge sync done · triggers Discovery on next sprint</span>'
-      },
+      cli: null,
       output: [
-        "<code>openspec/specs/billing/</code> updated",
-        "<code>docs/domain.md</code> v3.3 · 4 section gộp glossary + events + integration + edge cases",
-        "<code>schemas/events/billing.refund.v1.json</code>",
-        "Loop <b>Knowledge Sync → Discovery</b> kích hoạt"
+        "<code>plans/reports/code-review-*.md</code> · markdown report",
+        "<code>plans/reports/security-audit-*.md</code> · OWASP/STRIDE findings",
+        "<code>plans/reports/performance-*.md</code> · bottleneck analysis",
+        "GitHub PR comments line-level"
       ]
     },
-    OPS: {
-      title: "Operate — SLO Monitoring · Incident → Discovery",
-      phase: "Phase 6 · Operate", color: "operate",
+
+    COMMIT: {
+      title: "Git Commit & Push",
+      phase: "Step 5 · Delivery", color: "deliver",
       input: [
-        "Service đã 100% traffic v47",
-        "SLO definition · runbook · oncall rotation"
+        "Code đã APPROVED bởi Reviewer",
+        "Conventional commit convention"
       ],
       cli: {
-        kind: "sp", label: "PAGERDUTY + DATADOG", cwd: "~/billing-service",
-        cmd: '<span class="pmt">&gt;</span> <span class="you">Theo dõi SLO trong 7 ngày sau rollout</span>\n\n<span class="bullet">●</span> <span class="tool">Datadog SLO Tracker</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">refund.completion: 99.74% / 99% target · budget 74% remaining</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">refund.latency.p95: 312ms / 500ms target</span>\n\n<span class="bullet">●</span> <span class="tool">Incident</span>(<span class="arg">INC-8842 · day 4</span>)\n  <span class="arrow">⎿</span>  <span class="err">✗</span> <span class="out">Spike refund.failed: 3.2% trong 12 phút</span>\n  <span class="arrow">⎿</span>  <span class="out">Root cause: partner gateway timeout · KH dùng thẻ AmEx</span>\n  <span class="arrow">⎿</span>  <span class="out">Mitigation: tăng timeout 5s → 12s · queue retry</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Resolved 18 min · error budget consumed: 8%</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">superpowers:brainstorming</span>) <span class="arg">— post-mortem</span>\n  <span class="arrow">⎿</span>  <span class="out">Insight nghiệp vụ: AmEx có flow 3DS lâu hơn Visa/Master</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Tạo Discovery ticket: domain event <span class="key">RefundDelayed</span></span>\n\n<span class="bullet">●</span> <span class="tool">Loop</span>(<span class="arg">OPS → DISC</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Feed insight vào sprint Discovery kế tiếp</span>\n\n<span class="status"><span class="star">✻</span> Day 7 · 1 incident handled · 1 domain insight surfaced</span>',
-        note: "Incident → Discovery loop là <b>vòng học</b> quan trọng nhất: production phát hiện edge case nghiệp vụ chưa biết → nuôi domain model trưởng thành dần."
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/commit-commands:commit Tạo conventional commit</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">commit-commands:commit</span>)\n  <span class="arrow">⎿</span>  <span class="out">Loading skill instructions…</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">git status &amp;&amp; git diff</span>)\n  <span class="arrow">⎿</span>  <span class="out">12 files staged · auth module + tests</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">git commit -m "..."</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out"><span class="str">feat(auth): add JWT validation with refresh token</span></span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">git push origin feat/auth-jwt</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">3 commits pushed</span>\n\n<span class="status"><span class="star">✻</span> Branch ready · open PR next</span>'
       },
       output: [
-        "<code>incidents/INC-8842.md</code> · post-mortem 5-why",
-        "<code>slo-snapshot-week.json</code> · error budget tracking",
-        "Discovery ticket mới: <code>RefundDelayed</code> domain event",
-        "Runbook update: AmEx 3DS timeout configuration"
+        "Conventional commits (feat/fix/refactor/docs/test)",
+        "Branch <code>feat/auth-jwt</code> pushed",
+        "Không có AI reference trong commit message"
+      ]
+    },
+
+    PR_NODE: {
+      title: "Pull Request",
+      phase: "Step 5 · Delivery", color: "deliver",
+      input: [
+        "Branch đã push lên origin",
+        "Test plan + screenshots"
+      ],
+      cli: {
+        kind: "sp", label: "SUPERPOWERS", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">/commit-commands:commit-push-pr Mở PR</span>\n\n<span class="bullet">●</span> <span class="tool">Skill</span>(<span class="arg">commit-commands:commit-push-pr</span>)\n  <span class="arrow">⎿</span>  <span class="out">Generating PR body…</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">gh pr create --title ... --body ...</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">PR <span class="key">#142</span> opened</span>\n  <span class="arrow">⎿</span>  <span class="out">Title: feat(auth): add JWT validation</span>\n  <span class="arrow">⎿</span>  <span class="out">Body: Summary · Test plan · Screenshots</span>\n  <span class="arrow">⎿</span>  <span class="out">Reviewers: @lead-dev · @qa-bot</span>\n\n<span class="bullet">●</span> <span class="tool">CI</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">All green · 74 tests pass · build OK</span>\n\n<span class="status"><span class="star">✻</span> PR #142 ready for human review</span>'
+      },
+      output: [
+        "GitHub PR <code>#142</code> với summary + test plan",
+        "Auto-assign reviewers",
+        "CI all green · ready cho human approve"
+      ]
+    },
+
+    DEPLOY: {
+      title: "Deploy to Production",
+      phase: "Step 5 · Delivery", color: "deliver",
+      input: [
+        "PR đã merged sau human approval",
+        "Deploy target (Vercel · CF · k8s)"
+      ],
+      cli: {
+        kind: "sp", label: "DEVOPS", cwd: "~/project",
+        cmd: '<span class="pmt">&gt;</span> <span class="you">Deploy lên production sau khi merge</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">git checkout main &amp;&amp; git pull</span>)\n  <span class="arrow">⎿</span>  <span class="out">Switched to main · up to date</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">vercel --prod</span>)\n  <span class="arrow">⎿</span>  <span class="out">Building · 1m 24s · uploading</span>\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">Deployed: https://app.example.com</span>\n\n<span class="bullet">●</span> <span class="tool">Bash</span>(<span class="arg">npm run smoke-test:prod</span>)\n  <span class="arrow">⎿</span>  <span class="ok">✓</span> <span class="out">All endpoints healthy · auth works</span>\n\n<span class="bullet">●</span> <span class="tool">Edit</span>(<span class="arg">docs/project-changelog.md</span>)\n  <span class="arrow">⎿</span>  <span class="ok">+</span> <span class="out">v1.4.0 · auth JWT validation</span>\n\n<span class="status"><span class="star">✻</span> Deployed prod · changelog updated · roadmap synced</span>'
+      },
+      output: [
+        "Production deployment live",
+        "Smoke test pass · health check OK",
+        "<code>docs/project-changelog.md</code> updated",
+        "<code>docs/development-roadmap.md</code> synced"
       ]
     }
   };
 
+
   // ────────────── Plain-Vietnamese summary per node ──────────────
   const PURPOSES = {
-    USER: "Product Owner viết yêu cầu nghiệp vụ thành ticket có tiêu chí nghiệm thu rõ — đầu vào của cả pipeline.",
-    DISC: "Buổi research với người am hiểu nghiệp vụ. AI dẫn dắt liệt kê: việc gì xảy ra, ràng buộc nào, thuật ngữ ra sao, các service tương tác thế nào. Output gói gọn vào 1 file <code>docs/domain.md</code>.",
-    PS:   "Chốt cách các service nói chuyện với nhau, thời gian xử lý mong muốn, và xử lý ra sao khi service phụ thuộc bị lỗi. Mỗi quyết định lớn lưu thành 1 file ADR.",
-    PT:   "Chia tính năng thành ~12 task nhỏ, mỗi task có test cụ thể. Cần người duyệt checklist mới được code. Plan dev đọc thẳng để bắt tay code.",
-    DEV:  "Code từng task theo plan, bám TDD: RED → GREEN → REFACTOR. Xong task tick vào <code>tasks.md</code>. Theo đúng cấu trúc thư mục có sẵn của project.",
-    LINT: "Hook tự chạy khi commit: kiểm style code, quét lộ secret, kiểm syntax. Fail → commit bị chặn.",
-    SBE:  "Viết kịch bản test acceptance dạng Given-When-Then. Viết bằng tiếng tự nhiên — QA và PO đọc, review được.",
-    UIT:  "Chạy unit + integration + E2E test. Fail → pipeline tự gửi ngược về dev fix.",
-    CT:   "Test đảm bảo schema event/API mình publish không phá các service đang consume khi deploy. Pass = an toàn deploy.",
-    CR:   "Reviewer kiểm chất lượng code: race condition, secret leak, SQL injection, performance, naming.",
-    CMP:  "Bộ kiểm bảo mật + tuân thủ trước khi merge: SAST, DAST, SBOM, license, PII (GDPR/PCI). Có lỗi nặng → chặn PR.",
-    PR:   "AI viết commit message, push branch, mở PR. CI build Docker image đẩy lên ECR. Hạ tầng preview bằng <code>cdk diff</code> trước khi apply lên staging. Lên prod cần người duyệt thủ công.",
-    ROLL: "Bật feature flag, đẩy traffic dần dần: 5% → 25% → 50% → 100%. Theo dõi 3 chỉ số. Vượt ngưỡng → tự động rollback.",
-    SY:   "Sau khi merge: lưu spec change vào archive, cập nhật <code>docs/domain.md</code>, đăng ký schema event lên Glue Schema Registry.",
-    OPS:  "Theo dõi service 24/7. Có vấn đề thì PagerDuty báo oncall. Khi có incident → tìm root cause → viết incident report. Phát hiện trường hợp nghiệp vụ chưa nghĩ tới → đưa vào Research sprint sau."
+    USER:        "Product Owner đưa ra ý tưởng ban đầu — đầu vào của cả pipeline.",
+    BRAINSTORM:  "Brainstorm Agent dẫn dắt thảo luận để mở rộng ý tưởng, đặt câu hỏi đào sâu vào target user và value proposition.",
+    DOCS_INIT:   "Docs Manager Agent soạn SRS (Software Requirements Specification), wireframe low-fidelity và mockup high-fidelity từ ý tưởng đã brainstorm.",
+    DESIGN_TOOL: "Hoàn thiện design system trên Figma · GG Stitch · Claude Design — chốt design tokens, color palette, typography, component library.",
+    PLANNER:     "Planner Agent phân tích yêu cầu, lập master plan: chia thành các phase, xác định dependencies, ước lượng effort.",
+    RESEARCHER:  "Researcher Agents chạy song song nghiên cứu kỹ thuật cho từng phần — chọn lib, so sánh approach, dò pattern phù hợp.",
+    DOCS:        "Tổng hợp output thành Documentation: master plan, architecture document, technical specs, ready cho Implementation.",
+    CODER:       "Developer Agent code theo plan, tuân thủ coding standard và architecture. Auto-check compile error sau mỗi file để fail-fast.",
+    CODE_FILES:  "Source code production thực tế — clean, modular, mỗi file dưới 200 LOC, theo đúng cấu trúc đã định trong plan.",
+    TESTER:      "Tester Agent viết và chạy 3 loại test (unit · integration · E2E). Fail thì gửi ngược Developer fix, repeat đến khi pass hết.",
+    UNIT:        "Unit tests — cover business logic và edge case ở mức function/class riêng lẻ.",
+    INTEG:       "Integration tests — kiểm tra với DB thật, API external, message bus.",
+    E2E:         "End-to-end tests — chạy luồng người dùng chính từ đầu đến cuối.",
+    REVIEWER:    "Code Reviewer Agent audit chất lượng code, security, performance, edge case. Issue → quay lại Implementation refactor.",
+    REPORT:      "Review Report — tổng hợp findings + recommendations theo severity (critical · high · medium · low).",
+    COMMIT:      "Auto-commit với conventional message (feat/fix/refactor/docs) — message rõ ràng, không có AI reference.",
+    PR_NODE:     "Tạo Pull Request có summary, test plan, screenshots — sẵn sàng cho human review trên GitHub.",
+    DEPLOY:      "Deploy lên production (Vercel · Cloudflare · GCP · k8s) + smoke test + sync documentation update."
   };
 
   // ────────────── Artifact icons (SVG by lang) ──────────────
@@ -1335,602 +1365,271 @@ flowchart TB
 
   // ────────────── Artifact content per node ──────────────
   const ARTIFACTS = {
-    USER: [
-      { file: 'jira/FT-204.md', lang: 'markdown', body:
-`<span class="h"># FT-204 · Refund flow</span>
 
-<span class="h">## Story</span>
-Là Customer, tôi muốn yêu cầu hoàn tiền cho đơn đã thanh toán
-trong vòng 30 ngày, để xử lý các trường hợp đổi/trả hợp lệ.
+    BRAINSTORM: [
+      { file: 'docs/idea-brainstorm.md', lang: 'markdown', body:
+`<span class="h"># Brainstorm — Project Idea</span>
 
-<span class="h">## Acceptance criteria</span>
-- Refund chỉ nhận khi order.settledAt &lt; 30 ngày
-- Refund &gt; 5,000,000 VND <span class="n">⇒</span> cần Manager approve
-- Khi Refund Completed: gửi email + Slack #finance
-- Refund failed: retry 3 lần, log audit trail
+<span class="h">## Target users</span>
+1. <span class="k">Power user</span> — dev/PM cần tool quản lý nhanh, ít click
+2. <span class="k">Casual user</span> — non-technical, cần UI đơn giản
+3. <span class="k">Admin</span> — cần dashboard tổng quan + export
 
-<span class="h">## Success metric</span>
-Giảm 50% support ticket về refund (baseline 18%/tháng)` }
+<span class="h">## Value proposition</span>
+- Tự động hoá repetitive task (giảm 60% thời gian)
+- Tích hợp với tool team đang dùng (Slack, Jira)
+- Real-time sync giữa nhiều device
+
+<span class="h">## Risks &amp; assumptions</span>
+- <span class="warn">⚠</span> Giả định user có sẵn tài khoản Google/GitHub
+- <span class="warn">⚠</span> Volume data &lt; 10MB/user trong năm đầu` }
     ],
-    DISC: [
-      { file: 'docs/domain.md', lang: 'markdown', body:
-`<span class="h"># Billing · Domain Knowledge</span>
-<span class="c">&gt; Single source of truth cho AI + dev khi code Billing context.</span>
-<span class="c">&gt; Sửa file này → mọi developer + AI đều load lại.</span>
 
-<span class="h">## 1. Glossary (Ubiquitous Language)</span>
+    DOCS_INIT: [
+      { file: 'docs/srs.md', lang: 'markdown', body:
+`<span class="h"># Software Requirements Specification</span>
 
-| Term                       | Định nghĩa                                                | Ví dụ / ràng buộc                                                  |
-|----------------------------|-----------------------------------------------------------|--------------------------------------------------------------------|
-| <span class="k">RefundRequest</span>            | Yêu cầu hoàn tiền do Customer khởi tạo trên đơn đã settle | states: Pending → Approved/Rejected → Completed/Failed            |
-| <span class="k">EligibilityWindow</span>        | Khoảng thời gian sau settle được yêu cầu Refund          | default <span class="n">30 days</span>                                                  |
-| <span class="k">ManagerApprovalThreshold</span> | Ngưỡng tiền bắt buộc Manager approve                     | default <span class="n">5,000,000 VND</span>                                            |
-| <span class="k">PartialRefund</span>            | Refund nhỏ hơn tổng giá trị order                        | constraint: amount &lt; payment.amount                                |
-| Refund <b>vs</b> Reversal    | Refund = sau settle. Reversal = trước settle              | <span class="er">KHÔNG dùng lẫn</span>                                                  |
+<span class="h">## Functional</span>
+- <span class="k">FR-01</span> User đăng ký bằng email + password
+- <span class="k">FR-02</span> Login với JWT token + refresh
+- <span class="k">FR-03</span> Dashboard hiển thị 5 metric chính
+- <span class="k">FR-04</span> Export data ra CSV/Excel
+- ... (14 items total)
 
-<span class="h">## 2. Domain Events</span>
+<span class="h">## Non-functional</span>
+- <span class="k">NFR-01</span> P95 latency &lt; 300ms
+- <span class="k">NFR-02</span> Hỗ trợ 1000 concurrent users
+- <span class="k">NFR-03</span> 99.9% uptime SLA
+- ... (8 items total)
 
-| Event             | Payload                                                  | Producer | Consumer            |
-|-------------------|----------------------------------------------------------|----------|---------------------|
-| <span class="k">RefundRequested</span>   | <span class="s">{orderId, customerId, amount, reason, requestedAt}</span>      | Billing  | Notification        |
-| <span class="k">RefundApproved</span>    | <span class="s">{refundId, approvedBy, approvedAt}</span>                       | Billing  | Notification        |
-| <span class="k">RefundRejected</span>    | <span class="s">{refundId, rejectedBy, reason}</span>                            | Billing  | Notification        |
-| <span class="k">RefundCompleted</span>   | <span class="s">{refundId, transactionId, completedAt}</span>                   | Billing  | Notification, Analytics |
-| <span class="k">RefundFailed</span>      | <span class="s">{refundId, errorCode, retryable}</span>                          | Billing  | Notification, oncall |
-
-<span class="h">### Commands</span>
-- <span class="k">RequestRefund</span> · actor: Customer
-- <span class="k">ApproveRefund</span> · actor: Manager · guard: <span class="s">amount &gt; 5M</span>
-
-<span class="h">### Policies</span>
-- <span class="n">EligibilityWindow</span>: <span class="s">order.settledAt within 30 days</span>
-- <span class="n">ManagerApproval</span>: <span class="s">amount &gt; 5,000,000 VND → state PendingApproval</span>
-- <span class="n">RetryOnFailure</span>: <span class="s">max 3 attempts, exponential backoff</span>
-
-<span class="h">## 3. Integration Map</span>
-
-<span class="k">publishes</span>:
-  - RefundRequested · RefundApproved · RefundCompleted · RefundFailed
-  topic: <span class="s">billing.refund.v1</span>
-
-<span class="k">depends_on</span>:
-  - service: <span class="n">Identity</span>
-    pattern: <span class="n">Customer/Supplier</span>
-    integration: <span class="n">ACL (BillingCustomerAdapter)</span>
-    notes: <span class="s">"Billing không depend trực tiếp · timeout 2s · retry 3 lần"</span>
-
-  - service: <span class="n">Notification</span>
-    pattern: <span class="n">Conformist</span>
-    integration: <span class="n">EventBus</span>
-    notes: <span class="s">"consume schema y nguyên · enforce BACKWARD compat"</span>
-
-<span class="h">## 4. Edge cases ghi nhận</span>
-
-- <span class="k">PartialRefund</span>: refund 1 line item trong đơn nhiều item — handle riêng
-- <span class="k">CrossCurrencyRefund</span>: order USD, refund VND <span class="ok">→</span> dùng FX rate <b>tại lúc settle</b>, không phải lúc refund
-- <span class="k">AmEx 3DS</span>: timeout cao hơn Visa/Master · cần tăng timeout 12s thay vì 5s mặc định` }
+<span class="h">## Constraints</span>
+- Compliance: GDPR (EU users)
+- Tech stack: TypeScript · Node.js · Postgres` }
     ],
-    PS: [
-      { file: 'changes/ft-204-refund-strategic/design.md', lang: 'markdown', body:
-`<span class="h"># FT-204 · Strategic Design</span>
 
-<span class="h">## Integration patterns</span>
-- Billing → Identity     · <span class="n">Customer/Supplier via ACL</span>
-- Billing → Notification · <span class="n">Conformist via EventBus</span>
-  topic: <span class="s">billing.refund.v1</span>
+    DESIGN_TOOL: [
+      { file: 'docs/design-system.md', lang: 'markdown', body:
+`<span class="h"># Design System</span>
 
-<span class="h">## SLA</span>
-- Refund processing: <span class="n">P95 &lt; 24h</span> end-to-end
-- Identity verify: timeout 2s · retry 3 lần (exp backoff)
+<span class="h">## Color tokens</span>
+| Token            | Light    | Dark     |
+|------------------|----------|----------|
+| <span class="k">--bg-primary</span>     | #FFFFFF  | #0A0E1A  |
+| <span class="k">--text-primary</span>   | #0F172A  | #E2E8F0  |
+| <span class="k">--accent</span>         | #2563EB  | #38BDF8  |
 
-<span class="h">## Compensating action</span>
-Nếu Identity unreachable <span class="o">→</span> enqueue verification, không
-block refund creation. Refund vào state <span class="k">PendingVerification</span>,
-retry job xử lý sau.
+<span class="h">## Typography</span>
+- Heading: IBM Plex Sans, 600
+- Body: IBM Plex Sans, 400
+- Mono: JetBrains Mono, 400
 
-<span class="h">## ADRs</span>
-- ADR-0042: Notification = Conformist (giữ schema ổn định)` },
-      { file: 'adr/0042-notification-conformist.md', lang: 'markdown', body:
-`<span class="h"># ADR-0042 · Notification = Conformist (not Anti-Corruption)</span>
+<span class="h">## Spacing scale</span>
+4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 96 px
 
-<span class="h">## Status</span>
-Accepted · 2026-05-04
-
-<span class="h">## Context</span>
-Notification consume RefundCompleted, RefundFailed.
-Schema event do Billing định nghĩa &amp; sở hữu.
-
-<span class="h">## Decision</span>
-Notification giữ <span class="n">Conformist</span> với Billing schema.
-Không xây ACL ở phía Notification để tránh maintenance overhead.
-
-<span class="h">## Consequences</span>
-+ Schema thay đổi <span class="o">→</span> Notification phải migrate
-+ Versioning bắt buộc (<span class="s">billing.refund.v1</span>)` }
+<span class="h">## Components (24)</span>
+Button · Input · Select · Card · Modal · Toast · Tabs · Table · ...` }
     ],
-    PT: [
-      { file: 'plan.md', lang: 'markdown', body:
-`<span class="h"># FT-204 Tactical Implementation Plan</span>
 
-<span class="h">## Aggregate · RefundRequest (NEW)</span>
-  id: RefundId
-  orderId: OrderId
-  paymentId: PaymentId
-  amount: Money
-  reason: str
-  state: Pending | Approved | Rejected | Completed | Failed
+    PLANNER: [
+      { file: 'plans/2026-05-05/plan.md', lang: 'markdown', body:
+`<span class="h"># Master Plan · Project X</span>
 
-  <span class="c"># Invariants</span>
-  • amount &gt; 0
-  • amount ≤ payment.amount
-  • order.settledAt within 30 days
+<span class="h">## Overview</span>
+Build MVP của project X trong 5 phase · est <span class="n">25 SP</span>
 
-<span class="h">## Tasks (12 · est 13 SP)</span>
-<span class="o">[ ]</span> 1. RefundRequest aggregate + invariants
-<span class="o">[ ]</span> 2. RefundRequestRepository (interface + Postgres impl)
-<span class="o">[ ]</span> 3. Domain Service: RefundEligibilityChecker
-<span class="o">[ ]</span> 4. Application Service: RefundService
-<span class="o">[ ]</span> 5. ACL: BillingCustomerAdapter (gọi Identity)
-<span class="o">[ ]</span> 6. Event Bus publisher (billing.refund.v1)
-<span class="o">[ ]</span> 7. REST API: POST /refunds, GET /refunds/{id}
-<span class="o">[ ]</span> 8. Manager approval flow
-<span class="o">[ ]</span> 9. Compensating action handler
-<span class="o">[ ]</span> 10. BDD scenarios
-<span class="o">[ ]</span> 11. Pact contracts (Notification, Identity)
-<span class="o">[ ]</span> 12. Observability (metrics + traces)` },
-      { file: 'review-checklist.md', lang: 'markdown', body:
-`<span class="h"># Plan Review Checklist · FT-204</span>
+<span class="h">## Phases</span>
+| # | Name              | SP | Depends on |
+|---|-------------------|----|------------|
+| 1 | Auth &amp; user mgmt   | 5  | -          |
+| 2 | Data layer        | 6  | Phase 1    |
+| 3 | API endpoints     | 5  | Phase 2    |
+| 4 | UI dashboard      | 6  | Phase 3    |
+| 5 | Deploy &amp; observe   | 3  | Phase 4    |
 
-<span class="h">## Variant</span> BE Feature
-
-<span class="h">## Checklist</span>
-- [x] Aggregate boundary đúng
-- [x] Invariants đầy đủ
-- [x] Domain events có định nghĩa schema
-- [ ] Cross-context dependency được ACL bọc
-- [ ] Compensating action cho mỗi external call
-- [x] Test plan bao gồm contract test
-
-<span class="h">## Overall Decision</span>
-<span class="er">PENDING</span>   <span class="c"># developer phải đổi thành "OK" để execute</span>` }
+<span class="h">## Research questions (cho Researcher Agents)</span>
+- Q1: Auth strategy — JWT vs session vs OAuth?
+- Q2: Real-time data — polling vs WebSocket vs SSE?
+- Q3: Deploy target — Vercel vs CF Workers vs k8s?` }
     ],
-    DEV: [
-      { file: 'src/billing/domain/refund_request.py', lang: 'python', body:
-`<span class="k">from</span> dataclasses <span class="k">import</span> dataclass
-<span class="k">from</span> datetime <span class="k">import</span> datetime, timedelta
 
-<span class="k">class</span> <span class="h">RefundRequest</span>:
-    <span class="k">@classmethod</span>
-    <span class="k">def</span> request(
-        cls, order: Order, payment: Payment,
-        amount: Money, reason: str
-    ) <span class="o">-&gt;</span> <span class="s">"RefundRequest"</span>:
-        <span class="c"># Invariant 1: amount &gt; 0</span>
-        <span class="k">if</span> amount &lt;= Money.zero():
-            <span class="k">raise</span> InvalidRefundAmount(<span class="s">"Must be positive"</span>)
+    RESEARCHER: [
+      { file: 'plans/.../research/researcher-01-auth.md', lang: 'markdown', body:
+`<span class="h"># Research: Auth Strategy</span>
 
-        <span class="c"># Invariant 2: amount &lt;= payment.amount</span>
-        <span class="k">if</span> amount &gt; payment.amount:
-            <span class="k">raise</span> InvalidRefundAmount(<span class="s">"Exceeds paid amount"</span>)
+<span class="h">## Options compared</span>
+| Approach     | Pro                          | Con                       |
+|--------------|------------------------------|---------------------------|
+| <span class="k">JWT + refresh</span> | Stateless · scale tốt        | Refresh token rotation phức tạp |
+| <span class="k">Session</span>       | Đơn giản · revoke dễ          | Cần Redis · không scale ngang   |
+| <span class="k">OAuth (Auth0)</span> | Outsource · ít maintain       | Vendor lock · cost cao          |
 
-        <span class="c"># Invariant 3: order.settledAt within 30 days</span>
-        deadline = order.settled_at + timedelta(days=<span class="n">30</span>)
-        <span class="k">if</span> datetime.utcnow() &gt; deadline:
-            <span class="k">raise</span> OutsideEligibilityWindow()
+<span class="h">## Recommendation</span>
+<span class="ok">→</span> JWT + refresh token với rotation · phù hợp scale &amp; cost
 
-        instance = cls(
-            id=RefundId.new(),
-            order_id=order.id,
-            payment_id=payment.id,
-            amount=amount,
-            reason=reason,
-            state=State.PENDING,
-        )
-        instance._record(RefundRequested(...))
-        <span class="k">return</span> instance` }
+<span class="h">## Implementation hint</span>
+- Access token: 15 phút TTL
+- Refresh token: 7 ngày TTL · stored httpOnly cookie
+- Rotation on each refresh · revoke list nếu suspect leak` }
     ],
-    LINT: [
-      { file: 'arch-lint-report.json', lang: 'json', body:
-`{
-  <span class="k">"violations"</span>: [
-    {
-      <span class="k">"file"</span>: <span class="s">"src/billing/interface/refund_api.py"</span>,
-      <span class="k">"line"</span>: <span class="n">42</span>,
-      <span class="k">"rule"</span>: <span class="s">"no-direct-cross-context-import"</span>,
-      <span class="k">"message"</span>: <span class="s">"Imports IdentityClient directly; should use BillingCustomerAdapter (ACL)"</span>,
-      <span class="k">"severity"</span>: <span class="er">"error"</span>
-    },
-    {
-      <span class="k">"file"</span>: <span class="s">"src/billing/application/refund_service.py"</span>,
-      <span class="k">"line"</span>: <span class="n">18</span>,
-      <span class="k">"rule"</span>: <span class="s">"ubiquitous-language"</span>,
-      <span class="k">"message"</span>: <span class="s">"'cancel_refund' not in glossary; suggest 'reject_refund'"</span>,
-      <span class="k">"severity"</span>: <span class="er">"error"</span>
-    }
-  ],
-  <span class="k">"summary"</span>: { <span class="k">"error"</span>: <span class="n">2</span>, <span class="k">"warn"</span>: <span class="n">0</span> }
-}` }
+
+    DOCS: [
+      { file: 'docs/system-architecture.md', lang: 'markdown', body:
+`<span class="h"># System Architecture</span>
+
+<span class="h">## Components</span>
+- <span class="k">Frontend</span> · Next.js + React · static export
+- <span class="k">API</span> · Node.js + Fastify
+- <span class="k">DB</span> · Postgres 15 + Prisma ORM
+- <span class="k">Cache</span> · Redis (session + rate limit)
+- <span class="k">Queue</span> · BullMQ (background job)
+
+<span class="h">## Data flow</span>
+Client → CDN → API Gateway → Fastify → Prisma → Postgres
+                                  └→ Redis (cache)
+                                  └→ BullMQ (async)
+
+<span class="h">## API contracts</span>
+- <span class="k">POST /auth/register</span>  · <span class="s">{email, password}</span>
+- <span class="k">POST /auth/login</span>     · <span class="s">{email, password}</span> → token
+- <span class="k">POST /auth/refresh</span>   · <span class="s">{refreshToken}</span>     → newToken
+- ... (24 endpoints)` }
     ],
-    SBE: [
-      { file: 'features/billing/refund.feature', lang: 'gherkin', body:
-`<span class="h">Feature</span>: Refund Request
 
-  <span class="k">Scenario</span>: Customer requests refund within window
-    <span class="k">Given</span> an Order settled <span class="n">10</span> days ago
-    <span class="k">And</span> a Payment of <span class="n">2,000,000</span> VND
-    <span class="k">When</span> the Customer requests a Refund of <span class="n">2,000,000</span> VND
-    <span class="k">Then</span> a RefundRequest is created in <span class="ok">Pending</span> state
-    <span class="k">And</span> event <span class="ok">RefundRequested</span> is published
+    CODER: [
+      { file: 'src/auth/jwt.ts', lang: 'text', body:
+`<span class="c">// JWT validation with refresh token rotation</span>
+<span class="k">import</span> { SignJWT, jwtVerify } <span class="k">from</span> <span class="s">"jose"</span>;
 
-  <span class="k">Scenario</span>: Refund above threshold needs Manager Approval
-    <span class="k">Given</span> a Payment of <span class="n">8,000,000</span> VND
-    <span class="k">When</span> the Customer requests a Refund of <span class="n">8,000,000</span> VND
-    <span class="k">Then</span> the RefundRequest is in <span class="n">PendingApproval</span> state
-    <span class="k">And</span> event <span class="ok">RefundApprovalRequired</span> is published
+<span class="k">const</span> ACCESS_TTL  = <span class="n">15 * 60</span>;        <span class="c">// 15 min</span>
+<span class="k">const</span> REFRESH_TTL = <span class="n">7 * 24 * 60 * 60</span>; <span class="c">// 7 days</span>
 
-  <span class="k">Scenario</span>: Refund outside eligibility window is rejected
-    <span class="k">Given</span> an Order settled <span class="n">45</span> days ago
-    <span class="k">When</span> the Customer requests a Refund
-    <span class="k">Then</span> the request is rejected with <span class="er">OutsideEligibilityWindow</span>` }
+<span class="k">export async function</span> <span class="h">issueTokens</span>(userId: string) {
+  <span class="k">const</span> access  = <span class="k">await new</span> SignJWT({ sub: userId })
+    .setProtectedHeader({ alg: <span class="s">"HS256"</span> })
+    .setExpirationTime(<span class="s">"15m"</span>)
+    .sign(SECRET);
+
+  <span class="k">const</span> refresh = <span class="k">await new</span> SignJWT({ sub: userId, jti: ulid() })
+    .setProtectedHeader({ alg: <span class="s">"HS256"</span> })
+    .setExpirationTime(<span class="s">"7d"</span>)
+    .sign(SECRET);
+
+  <span class="k">return</span> { access, refresh };
+}
+
+<span class="k">export async function</span> <span class="h">validateToken</span>(token: string) {
+  <span class="k">try</span> {
+    <span class="k">const</span> { payload } = <span class="k">await</span> jwtVerify(token, SECRET);
+    <span class="k">return</span> { ok: <span class="ok">true</span>, userId: payload.sub };
+  } <span class="k">catch</span> (e) {
+    <span class="k">return</span> { ok: <span class="er">false</span>, reason: e.code };
+  }
+}</span>` }
     ],
-    UIT: [
-      { file: 'test-results.summary.txt', lang: 'text', body:
-`<span class="ok">PASS</span> tests/billing/domain/test_refund_request.py    34 passed
-<span class="ok">PASS</span> tests/billing/application/test_refund_service.py  18 passed
-<span class="ok">PASS</span> tests/billing/integration/test_repo.py            12 passed
-<span class="ok">PASS</span> features/billing/refund.feature                    9 passed
-<span class="er">FAIL</span> e2e/checkout-refund.spec.ts
 
-  <span class="er">✗</span> partial refund: amount mismatch in event payload
-
-    Expected: { amount: <span class="n">1500000</span> }
-    Received: { amount: <span class="n">150000000</span> }   <span class="c"># off by 100x — unit conversion bug</span>
-
-    at refund_service.py:<span class="n">112</span>
-    at e2e/checkout-refund.spec.ts:<span class="n">87</span>
-
-<span class="h">────── Coverage by aggregate ──────</span>
-RefundRequest   stmts <span class="ok">96%</span>   branch <span class="ok">91%</span>   func <span class="ok">100%</span>
-Payment         stmts <span class="ok">88%</span>   branch <span class="n">84%</span>   func <span class="ok">92%</span>
-Order           stmts <span class="ok">91%</span>   branch <span class="ok">88%</span>   func <span class="ok">95%</span>
-
-73 passed · <span class="er">1 failed</span> · loop back to Developer (3 → 2)` }
-    ],
-    CT: [
-      { file: 'pacts/billing-notification.json', lang: 'json', body:
-`{
-  <span class="k">"consumer"</span>: <span class="s">"Notification"</span>,
-  <span class="k">"provider"</span>: <span class="s">"Billing"</span>,
-  <span class="k">"interactions"</span>: [
-    {
-      <span class="k">"description"</span>: <span class="s">"RefundCompleted event"</span>,
-      <span class="k">"request"</span>: {
-        <span class="k">"topic"</span>: <span class="s">"billing.refund.v1"</span>,
-        <span class="k">"type"</span>: <span class="s">"RefundCompleted"</span>
-      },
-      <span class="k">"matchingRules"</span>: {
-        <span class="s">"$.refundId"</span>:    { <span class="k">"match"</span>: <span class="s">"type"</span> },
-        <span class="s">"$.amount"</span>:      { <span class="k">"match"</span>: <span class="s">"type"</span> },
-        <span class="s">"$.completedAt"</span>: { <span class="k">"match"</span>: <span class="s">"iso8601"</span> }
-      }
-    }
-  ],
-  <span class="k">"verifiedAt"</span>: <span class="s">"2026-05-04T08:30:00Z"</span>,
-  <span class="k">"status"</span>: <span class="ok">"compatible"</span>
-}` }
-    ],
-    CMP: [
-      { file: 'security-report.json', lang: 'json', body:
-`{
-  <span class="k">"sast"</span>: { <span class="k">"high"</span>: <span class="n">0</span>, <span class="k">"medium"</span>: <span class="n">2</span>, <span class="k">"low"</span>: <span class="n">5</span> },
-  <span class="k">"dast"</span>: { <span class="k">"status"</span>: <span class="ok">"clean"</span> },
-  <span class="k">"sbom"</span>: {
-    <span class="k">"format"</span>: <span class="s">"CycloneDX 1.5"</span>,
-    <span class="k">"components"</span>: <span class="n">184</span>,
-    <span class="k">"licenses"</span>: { <span class="k">"unsafe"</span>: <span class="n">0</span> }
-  },
-  <span class="k">"secrets"</span>: { <span class="k">"gitleaks"</span>: <span class="n">0</span> },
-  <span class="k">"piiFindings"</span>: [
-    {
-      <span class="k">"file"</span>: <span class="s">"src/billing/interface/refund_api.py"</span>,
-      <span class="k">"line"</span>: <span class="n">61</span>,
-      <span class="k">"category"</span>: <span class="er">"PII-EMAIL"</span>,
-      <span class="k">"regulation"</span>: <span class="s">"GDPR Art.32"</span>,
-      <span class="k">"message"</span>: <span class="s">"customer.email logged in plain text"</span>,
-      <span class="k">"suggest"</span>: <span class="s">"redact via PIIRedactor.mask_email()"</span>
-    }
-  ],
-  <span class="k">"verdict"</span>: <span class="er">"BLOCK"</span>,
-  <span class="k">"auditTrailS3"</span>: <span class="s">"s3://compliance-audit/billing/2026-05-05/...lock=7y"</span>
-}` }
-    ],
-    CR: [
-      { file: 'review-report.md', lang: 'markdown', body:
-`<span class="h"># Code Review · PR #1287</span>
-
-<span class="h">## ⚠ refund_service.py:67 — Race condition</span>
-<span class="c">def process_refund(refund_id):
-    refund = repo.get(refund_id)
-    payment = payment_repo.get(refund.payment_id)
-    payment.deduct(refund.amount)   # ← no version check
-    payment_repo.save(payment)</span>
-
-<span class="ok">Suggest</span>: optimistic lock on <span class="n">Payment.version</span>
-<span class="c">payment_repo.save(payment, expected_version=payment.version)</span>
-
-<span class="h">## ⚠ Hard-coded secret in test fixture</span>
-<span class="er">tests/billing/fixtures/payments.py:12</span>
-<span class="c">STRIPE_KEY = "sk_test_&lt;redacted-demo-value&gt;"</span>
-<span class="ok">Suggest</span>: move to env / .env.test, add to .gitignore
-
-<span class="h">## ✓ Verified</span>
-- No SQL injection (prepared statements throughout)
-- PII redaction in logs (customer email, card last4)
+    TESTER: [
+      { file: 'plans/reports/tester-2026-05-05.md', lang: 'markdown', body:
+`<span class="h"># Test Execution Report</span>
 
 <span class="h">## Summary</span>
-<span class="n">2 issues</span> · <span class="ok">0 critical</span> · fix before merge` }
+<span class="ok">✓</span> 74 passed · 0 failed · 1 skipped
+Coverage: <span class="ok">96%</span> statements · <span class="ok">91%</span> branches
+
+<span class="h">## By category</span>
+| Type        | Count | Pass | Cov  |
+|-------------|-------|------|------|
+| Unit        | 52    | 52   | 96%  |
+| Integration | 14    | 14   | 88%  |
+| E2E         | 8     | 8    | n/a  |
+
+<span class="h">## Recommendation</span>
+- 1 test bị skip (timing-dependent · cần refactor)
+- Coverage branch &lt; 95% ở module <span class="k">data/sync</span> · thêm edge case` }
     ],
-    DMR: [
-      { file: 'domain-model-health.json', lang: 'json', body:
-`{
-  <span class="k">"aggregateBoundary"</span>: { <span class="k">"status"</span>: <span class="ok">"ok"</span> },
 
-  <span class="k">"aclIntegrity"</span>: {
-    <span class="k">"status"</span>: <span class="n">"warn"</span>,
-    <span class="k">"leaks"</span>: [
-      {
-        <span class="k">"file"</span>: <span class="s">"src/billing/application/refund_service.py"</span>,
-        <span class="k">"line"</span>: <span class="n">88</span>,
-        <span class="k">"from"</span>: <span class="s">"billing"</span>,
-        <span class="k">"to"</span>: <span class="s">"identity"</span>,
-        <span class="k">"import"</span>: <span class="s">"IdentityDTO"</span>,
-        <span class="k">"suggest"</span>: <span class="s">"Define CustomerSummary in billing/domain via BillingCustomerAdapter"</span>
-      }
-    ]
-  },
+    REVIEWER: [
+      { file: 'plans/reports/code-review-2026-05-05.md', lang: 'markdown', body:
+`<span class="h"># Code Review Report</span>
 
-  <span class="k">"languageDrift"</span>: {
-    <span class="k">"termsOutsideGlossary"</span>: []
-  },
+<span class="h">## ⚠ auth.ts:67 — Race condition</span>
+<span class="c">async function refresh(token) {
+  const decoded = await validateToken(token);  // ← lookup
+  await revokeOld(token);                       // ← lookup again
+  return issueTokens(decoded.userId);
+}</span>
 
-  <span class="k">"modelHealth"</span>: {
-    <span class="k">"anemicAggregateRisk"</span>: {
-      <span class="k">"status"</span>: <span class="n">"warn"</span>,
-      <span class="k">"aggregate"</span>: <span class="s">"RefundRequest"</span>,
-      <span class="k">"logicLocation"</span>: <span class="s">"application.refund_service.can_approve"</span>,
-      <span class="k">"suggest"</span>: <span class="s">"Move can_approve() into RefundRequest aggregate"</span>
-    }
-  },
+2 request đồng thời với cùng refresh token → cả 2 đều pass validation
+trước khi <span class="er">revokeOld</span> chạy → cấp 2 access token mới.
 
-  <span class="k">"loopFCandidate"</span>: <span class="er">false</span>,
-  <span class="k">"verdict"</span>: <span class="s">"fix-in-place"</span>
-}` }
+<span class="ok">Suggest</span>: dùng <span class="n">SELECT FOR UPDATE</span> hoặc Redis lock trên jti.
+
+<span class="h">## ⚠ list endpoint — N+1 query</span>
+<span class="c">items.forEach(async i =&gt; {
+  i.owner = await db.user.findById(i.ownerId);  // ← N queries
+});</span>
+
+<span class="ok">Suggest</span>: dùng <span class="n">findMany({ where: { id: { in: ids } } })</span> hoặc DataLoader.
+
+<span class="h">## Verdict</span>
+<span class="warn">REFACTOR REQUIRED</span> · 2 issue · 0 critical · không block PR nhưng phải fix trước merge` }
     ],
-    PR: [
-      { file: 'infra-cdk/bin/app.ts', lang: 'text', body:
-`<span class="c">// CDK app entry · 2 stage (prod + staging) · per-context stacks</span>
-<span class="k">import</span> { App } <span class="k">from</span> <span class="s">"aws-cdk-lib"</span>;
-<span class="k">import</span> { PlatformStack }     <span class="k">from</span> <span class="s">"../lib/platform/platform-stack"</span>;
-<span class="k">import</span> { BillingStack }      <span class="k">from</span> <span class="s">"../../services/billing/infra/billing-stack"</span>;
-<span class="k">import</span> { IdentityStack }     <span class="k">from</span> <span class="s">"../../services/identity/infra/identity-stack"</span>;
-<span class="k">import</span> { NotificationStack } <span class="k">from</span> <span class="s">"../../services/notification/infra/notification-stack"</span>;
 
-<span class="k">const</span> app = <span class="k">new</span> App();
-
-[<span class="s">"prod"</span>, <span class="s">"staging"</span>].forEach((stage) =&gt; {
-  <span class="c">// 1. Shared cross-service infra (deploy once per env)</span>
-  <span class="k">const</span> platform = <span class="k">new</span> PlatformStack(app, <span class="s">\`ddd-platform-\${stage}-Platform\`</span>, { stage });
-
-  <span class="c">// 2. One stack per bounded context — all depend on platform</span>
-  <span class="k">new</span> BillingStack(app, <span class="s">\`ddd-platform-\${stage}-Billing\`</span>, {
-    stage,
-    vpc:           platform.vpc,
-    eventBus:      platform.eventBus,
-    apiGateway:    platform.apiGateway,
-    schemaRegistry: platform.schemaRegistry,
-  });
-
-  <span class="k">new</span> IdentityStack(app,     <span class="s">\`ddd-platform-\${stage}-Identity\`</span>,     { stage, ...platform.shared });
-  <span class="k">new</span> NotificationStack(app, <span class="s">\`ddd-platform-\${stage}-Notification\`</span>, { stage, ...platform.shared });
-});
-
-app.synth();</span>` },
-
-      { file: 'services/billing/infra/billing-stack.ts', lang: 'text', body:
-`<span class="c">// Composite root · BillingStack — chỉ orchestrate, không tạo resource trực tiếp</span>
-<span class="k">export class</span> <span class="h">BillingStack</span> <span class="k">extends</span> Stack {
-  <span class="k">readonly</span> database:      BillingDatabaseStack;
-  <span class="k">readonly</span> service:       BillingServiceStack;
-  <span class="k">readonly</span> secrets:       BillingSecretsStack;
-  <span class="k">readonly</span> observability: BillingObservabilityStack;
-  <span class="k">readonly</span> pipeline:      BillingPipelineStack;
-
-  <span class="k">constructor</span>(scope: Construct, id: string, props: BillingStackProps) {
-    <span class="k">super</span>(scope, id, props);
-
-    <span class="c">// 1. Database first — service inject endpoint</span>
-    <span class="k">this</span>.database = <span class="k">new</span> BillingDatabaseStack(<span class="k">this</span>, <span class="s">"Database"</span>, {
-      vpc: props.vpc, stage: props.stage,
-    });
-
-    <span class="c">// 2. Secrets (DB password, Stripe key) — auto-rotate 30d</span>
-    <span class="k">this</span>.secrets = <span class="k">new</span> BillingSecretsStack(<span class="k">this</span>, <span class="s">"Secrets"</span>, { stage: props.stage });
-
-    <span class="c">// 3. ECS Fargate service — depends on db + secrets + eventBus</span>
-    <span class="k">this</span>.service = <span class="k">new</span> BillingServiceStack(<span class="k">this</span>, <span class="s">"Service"</span>, {
-      vpc:        props.vpc,
-      eventBus:   props.eventBus,
-      apiGateway: props.apiGateway,
-      database:   <span class="k">this</span>.database,
-      secrets:    <span class="k">this</span>.secrets,
-    });
-
-    <span class="c">// 4. Observability — alarms, dashboards, X-Ray</span>
-    <span class="k">this</span>.observability = <span class="k">new</span> BillingObservabilityStack(<span class="k">this</span>, <span class="s">"Observability"</span>, {
-      service: <span class="k">this</span>.service, database: <span class="k">this</span>.database,
-    });
-
-    <span class="c">// 5. CodePipeline — independent stack, can deploy/destroy without service</span>
-    <span class="k">this</span>.pipeline = <span class="k">new</span> BillingPipelineStack(<span class="k">this</span>, <span class="s">"Pipeline"</span>, {
-      service: <span class="k">this</span>.service, schemaRegistry: props.schemaRegistry,
-    });
-
-    <span class="c">// 6. Register refund event schema</span>
-    <span class="k">new</span> CfnSchema(<span class="k">this</span>, <span class="s">"RefundSchema"</span>, {
-      registryName:     props.schemaRegistry.name,
-      schemaName:       <span class="s">"refund.v1"</span>,
-      compatibility:    <span class="s">"BACKWARD"</span>,
-      dataFormat:       <span class="s">"JSON"</span>,
-      schemaDefinition: readFileSync(<span class="s">"shared/schemas/refund.v1.json"</span>, <span class="s">"utf8"</span>),
-    });
-  }
-}</span>` },
-
-      { file: 'services/billing/infra/billing-service-stack.ts', lang: 'text', body:
-`<span class="c">// ECS Fargate + ALB target — phần "compute" của Billing context</span>
-<span class="k">export class</span> <span class="h">BillingServiceStack</span> <span class="k">extends</span> NestedStack {
-  <span class="k">readonly</span> service: FargateService;
-
-  <span class="k">constructor</span>(scope: Construct, id: string, props: BillingServiceProps) {
-    <span class="k">super</span>(scope, id, props);
-
-    <span class="k">const</span> image = ContainerImage.fromEcrRepository(
-      Repository.fromRepositoryName(<span class="k">this</span>, <span class="s">"Repo"</span>, <span class="s">"billing"</span>),
-      process.env.GIT_SHA ?? <span class="s">"latest"</span>,
-    );
-
-    <span class="k">const</span> task = <span class="k">new</span> FargateTaskDefinition(<span class="k">this</span>, <span class="s">"Task"</span>, { cpu: <span class="n">512</span>, memoryLimitMiB: <span class="n">1024</span> });
-    task.addContainer(<span class="s">"app"</span>, {
-      image,
-      environment: {
-        DB_HOST:     props.database.cluster.clusterEndpoint.hostname,
-        EVENT_BUS:   props.eventBus.eventBusName,
-      },
-      secrets: { STRIPE_KEY: Secret.fromSecretsManager(props.secrets.stripeKey) },
-      logging: LogDrivers.awsLogs({ streamPrefix: <span class="s">"billing"</span> }),
-    });
-
-    <span class="k">this</span>.service = <span class="k">new</span> FargateService(<span class="k">this</span>, <span class="s">"Svc"</span>, {
-      cluster: props.vpc.cluster, taskDefinition: task, desiredCount: <span class="n">2</span>,
-    });
-    <span class="k">this</span>.service.autoScaleTaskCount({ minCapacity: <span class="n">2</span>, maxCapacity: <span class="n">10</span> })
-      .scaleOnCpuUtilization(<span class="s">"Cpu"</span>, { targetUtilizationPercent: <span class="n">65</span> });
-
-    props.eventBus.grantPutEventsTo(task.taskRole);
-    props.apiGateway.addRoute(<span class="s">"POST"</span>, <span class="s">"/refunds"</span>, <span class="k">this</span>.service);
-  }
-}</span>` },
+    COMMIT: [
       { file: 'commit message', lang: 'git', body:
-`<span class="h">feat(billing): add refund request aggregate (FT-204)</span>
+`<span class="h">feat(auth): add JWT validation with refresh token rotation</span>
 
-Implement RefundRequest aggregate with invariants for refund
-eligibility, threshold-based manager approval, and event
-publication for downstream contexts.
+Implement JWT-based authentication with short-lived access tokens
+(15 min TTL) and long-lived refresh tokens (7 days TTL) with
+rotation on each refresh.
 
-- domain: RefundRequest aggregate, value objects, domain events
-- application: RefundService orchestrating refund lifecycle
-- infrastructure: PostgreSQL repository, EventBus publisher
-- ACL: BillingCustomerAdapter for Identity integration
+- src/auth/jwt.ts — issueTokens, validateToken
+- src/auth/middleware.ts — protect route guard
+- src/auth/refresh.ts — rotation + revoke list
 
-Closes <span class="n">FT-204</span>
-Refs <span class="n">ADR-0042</span>` },
+Closes <span class="n">#142</span>` }
+    ],
+
+    PR_NODE: [
       { file: 'gh pr create — body', lang: 'markdown', body:
 `<span class="h">## Summary</span>
-- New <span class="k">RefundRequest</span> aggregate in Billing context
-- Refund flow with manager approval &gt; 5M VND threshold
-- Event publishing on state transitions (4 events)
-- BillingCustomerAdapter (ACL) for Identity integration
+- Add JWT validation với refresh token rotation
+- Protect route guard middleware
+- Revoke list cho suspect leak
 
 <span class="h">## Test plan</span>
-- [x] Unit + integration green (64 tests)
-- [x] BDD scenarios pass (refund.feature)
-- [x] Pact contracts verified · Notification, Identity
-- [x] Coverage RefundRequest <span class="ok">96%</span>
-- [ ] Manual smoke on staging
+- [x] Unit (52 tests, 96% coverage)
+- [x] Integration (14 tests, DB + Redis)
+- [x] E2E happy path (login → refresh → logout)
+- [ ] Manual smoke trên staging
 
 <span class="h">## Linked</span>
-- OpenSpec: <span class="s">openspec/changes/ft-204-refund-strategic/</span>
-- ADR: <span class="s">adr/0042-notification-conformist.md</span>
-- Glossary delta: <span class="s">specs/billing/glossary.md</span>
+- Issue: <span class="s">#142</span>
+- Research: <span class="s">researcher-01-auth.md</span>
+- Architecture: <span class="s">docs/system-architecture.md</span>
 
 <span class="h">## Reviewers</span>
-@an (context owner) · @qa-bot · @domain-model-reviewer` }
+@lead-dev · @qa-bot` }
     ],
-    ROLL: [
-      { file: 'rollout-report.json', lang: 'json', body:
-`{
-  <span class="k">"deploymentId"</span>: <span class="s">"dpl-9c4f1a2"</span>,
-  <span class="k">"image"</span>: <span class="s">"billing:9c4f1a2"</span>,
-  <span class="k">"featureFlag"</span>: <span class="s">"refund-v2"</span>,
-  <span class="k">"stages"</span>: [
-    { <span class="k">"pct"</span>: <span class="n">5</span>,   <span class="k">"durationMin"</span>: <span class="n">15</span>, <span class="k">"slo"</span>: <span class="ok">"PASS"</span>, <span class="k">"errorRate"</span>: <span class="n">0.04</span> },
-    { <span class="k">"pct"</span>: <span class="n">25</span>,  <span class="k">"durationMin"</span>: <span class="n">15</span>, <span class="k">"slo"</span>: <span class="ok">"PASS"</span>, <span class="k">"errorRate"</span>: <span class="n">0.06</span> },
-    { <span class="k">"pct"</span>: <span class="n">50</span>,  <span class="k">"durationMin"</span>: <span class="n">15</span>, <span class="k">"slo"</span>: <span class="ok">"PASS"</span>, <span class="k">"errorRate"</span>: <span class="n">0.05</span> },
-    { <span class="k">"pct"</span>: <span class="n">100</span>, <span class="k">"durationMin"</span>: <span class="n">15</span>, <span class="k">"slo"</span>: <span class="ok">"PASS"</span>, <span class="k">"errorRate"</span>: <span class="n">0.05</span> }
-  ],
-  <span class="k">"slo"</span>: {
-    <span class="k">"latencyP95Ms"</span>:        { <span class="k">"target"</span>: <span class="n">500</span>, <span class="k">"actual"</span>: <span class="n">312</span> },
-    <span class="k">"errorRatePct"</span>:        { <span class="k">"target"</span>: <span class="n">0.1</span>, <span class="k">"actual"</span>: <span class="n">0.05</span> },
-    <span class="k">"refundCompletionPct"</span>: { <span class="k">"target"</span>: <span class="n">99</span>,  <span class="k">"actual"</span>: <span class="n">99.6</span> }
-  },
-  <span class="k">"rollbackArmedFor"</span>: <span class="s">"24h post-100%"</span>,
-  <span class="k">"verdict"</span>: <span class="ok">"PROMOTED"</span>
-}` }
-    ],
-    SY: [
-      { file: 'archive/2026-05-04-ft-204-refund/MIGRATION.md', lang: 'markdown', body:
-`<span class="h"># Archived · FT-204 Refund</span>
 
-<span class="h">## Applied</span>
-- Glossary <span class="n">v3.2 → v3.3</span> · 4 new terms
-  RefundRequest · EligibilityWindow · ManagerApprovalThreshold · PartialRefund
-- context-map.yaml · +3 relationships (Billing↔Identity, Billing↔Notification)
-- specs/billing/refund/ · added (5 specs)
-- ADR-0042 · published
+    DEPLOY: [
+      { file: 'docs/project-changelog.md', lang: 'markdown', body:
+`<span class="h"># Changelog</span>
 
-<span class="h">## Event schema registered</span>
-<span class="s">billing.refund.v1</span> <span class="o">→</span> registry.internal/billing/refund/v1
-  Subscribers: Notification (Conformist)
+<span class="h">## v1.4.0 — 2026-05-05</span>
 
-<span class="h">## Knowledge sync</span>
-Trigger Discovery refresh on next sprint (loop 5 → 0).
-Recent changes feed: glossary v3.3, context map v12.
+<span class="h">### Features</span>
+- <span class="k">feat(auth)</span>: JWT validation với refresh token rotation
+- <span class="k">feat(api)</span>: rate limit middleware (100 req/min/IP)
 
-<span class="ok">✓</span> Archive complete · all artifacts versioned in git` }
-    ],
-    OPS: [
-      { file: 'incidents/INC-8842.md', lang: 'markdown', body:
-`<span class="h"># INC-8842 · Refund failure spike (AmEx 3DS)</span>
+<span class="h">### Fixes</span>
+- <span class="k">fix(auth)</span>: race condition khi 2 refresh đồng thời
+- <span class="k">fix(api)</span>: N+1 query trong list endpoint
 
-<span class="h">## Timeline</span>
-<span class="o">14:23</span>  Datadog alert · refund.failed &gt; 3% (5-min window)
-<span class="o">14:25</span>  Oncall paged · @huy
-<span class="o">14:31</span>  Identified: AmEx cards · partner gateway timeout 5s
-<span class="o">14:33</span>  Mitigation: bump timeout 5s → 12s · enqueue retry
-<span class="o">14:41</span>  Verified · refund.failed &lt; 0.1%
-<span class="o">14:42</span>  <span class="ok">RESOLVED</span> · 18 min total
-
-<span class="h">## Impact</span>
-- 47 refund affected · 31 auto-retry success · 16 manual
-- Error budget consumed: <span class="n">8%</span> (still &gt;65% remaining)
-- Customer-visible: 16 KH bị delay 30-60 phút
-
-<span class="h">## Root cause (5-why)</span>
-1. Refund fail vì gateway timeout
-2. Timeout vì AmEx 3DS step lâu hơn Visa
-3. Domain model giả định mọi card cùng latency
-4. Discovery chưa surface card-type-specific timing
-5. Không có domain event <span class="k">RefundDelayed</span> để tách "delay" khác "failed"
-
-<span class="h">## Action items → Discovery loop</span>
-- [ ] Add domain event <span class="k">RefundDelayed</span> vào glossary
-- [ ] Aggregate <span class="k">RefundRequest</span> tách state <span class="k">Delayed</span> ≠ <span class="k">Failed</span>
-- [ ] Update event storming: card-type-specific timing
-- [ ] Runbook: timeout config per card scheme
-
-<span class="h">## Loop</span>
-<span class="ok">→</span> Feed insight vào sprint Discovery kế tiếp (OPS → DISC)` }
+<span class="h">### Deploy</span>
+- Deployed to <span class="s">https://app.example.com</span> · 2026-05-05 14:23 UTC
+- Smoke test pass · 0 5xx error trong 30 phút đầu` }
     ]
+
   };
 
   // ────────────── Render modal ──────────────
