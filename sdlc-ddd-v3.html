@@ -486,6 +486,77 @@
   .artifact pre .ok { color: #5DB47A; font-weight: 700; }
   .artifact pre .er { color: #E36471; font-weight: 700; }
 
+  /* Glossary section — bottom of page */
+  .gloss {
+    margin: 24px 24px 0;
+    padding: 22px 26px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-left: 3px solid #C084FC;
+    border-radius: 10px;
+  }
+  .gloss-h {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    color: #C084FC; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  .gloss h2 {
+    font-family: var(--font-mono); font-size: 18px; font-weight: 700;
+    margin: 4px 0 4px;
+  }
+  .gloss > p {
+    font-size: 12.5px; color: var(--text-3);
+    margin-bottom: 18px;
+  }
+  .gloss-grp {
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border);
+  }
+  .gloss-grp:first-of-type {
+    margin-top: 8px; padding-top: 0; border-top: 0;
+  }
+  .gloss-grp-h {
+    font-family: var(--font-mono); font-size: 11.5px; font-weight: 700;
+    color: #C084FC; letter-spacing: 0.4px;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .gloss-grp-h .num {
+    background: rgba(192,132,252,0.15); color: #C084FC;
+    font-size: 10px; padding: 2px 7px; border-radius: 4px;
+    font-weight: 800;
+  }
+  .gloss-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  .gloss-table tr { border-bottom: 1px solid var(--border-soft); }
+  .gloss-table tr:last-child { border-bottom: 0; }
+  .gloss-table td {
+    padding: 8px 10px;
+    vertical-align: top;
+    line-height: 1.55;
+  }
+  .gloss-table td:first-child {
+    font-family: var(--font-mono); font-weight: 600;
+    color: var(--text-1);
+    background: var(--bg-1);
+    width: 220px;
+    white-space: nowrap;
+  }
+  .gloss-table td:last-child { color: var(--text-2); }
+  .gloss-table td code {
+    font-family: var(--font-mono); font-size: 11.5px;
+    background: var(--bg-3); border: 1px solid var(--border);
+    padding: 1px 5px; border-radius: 3px;
+    color: var(--text-1);
+  }
+  @media (max-width: 720px) {
+    .gloss-table td:first-child { width: 130px; white-space: normal; }
+    .gloss-table { font-size: 11.5px; }
+  }
+
   /* "Node này làm gì?" callout — top of modal */
   .purpose {
     margin-bottom: 18px;
@@ -881,6 +952,139 @@ flowchart TB
     <code style="background:var(--bg-1);border:1px solid var(--border);padding:1px 6px;border-radius:3px">USER → DEV → LINT → UIT → PR → ROLL</code>
     <span style="color:var(--text-3);margin-left:8px">· cần manual override + audit log + post-mortem nếu &gt; 1/sprint</span>
   </div>
+
+  <!-- ── GLOSSARY ────────────────────────────────────── -->
+  <section class="gloss" aria-label="Glossary">
+    <span class="gloss-h">// Reference glossary</span>
+    <h2>Bảng từ ngữ nghiệp vụ — DDD &amp; SDLC</h2>
+    <p>9 nhóm thuật ngữ dùng trong pipeline V3 — strategic/tactical design, event-driven, layering, test, deploy, AI tooling.</p>
+
+    <!-- 1 -->
+    <div class="gloss-grp">
+      <div class="gloss-grp-h"><span class="num">1</span>Strategic Design (chiến lược)</div>
+      <table class="gloss-table">
+        <tr><td>Domain</td><td>Lĩnh vực nghiệp vụ mà phần mềm phục vụ (ngân hàng, y tế, e-commerce...).</td></tr>
+        <tr><td>Domain Expert</td><td>Người am hiểu nghiệp vụ thực sự (Finance Lead, Logistics Manager) — KHÁC Product Owner (PO ưu tiên scope/giá trị, Domain Expert nắm quy tắc).</td></tr>
+        <tr><td>Bounded Context</td><td>"Quốc gia" trong hệ thống — vùng có model + ngôn ngữ riêng. <code>Customer</code> trong Billing ≠ <code>Customer</code> trong Identity dù cùng tên.</td></tr>
+        <tr><td>Context Map</td><td>Bản đồ quan hệ giữa các bounded context — ai phụ thuộc ai, theo pattern nào.</td></tr>
+        <tr><td>Anti-Corruption Layer (ACL)</td><td>Lớp adapter dịch ngôn ngữ context bên ngoài thành ngôn ngữ context của mình — để ngoại lai không "lây nhiễm" model nội bộ.</td></tr>
+        <tr><td>Conformist</td><td>Chấp nhận theo schema upstream nguyên trạng, không build adapter (đỡ tốn nhưng phụ thuộc).</td></tr>
+        <tr><td>Customer/Supplier</td><td>Quan hệ thượng nguồn-hạ nguồn có thoả thuận — supplier phải tôn trọng nhu cầu customer.</td></tr>
+        <tr><td>Shared Kernel</td><td>Phần code/model chung tối thiểu giữa 2 context, đồng quản lý — đụng vào phải ai cũng đồng ý.</td></tr>
+      </table>
+    </div>
+
+    <!-- 2 -->
+    <div class="gloss-grp">
+      <div class="gloss-grp-h"><span class="num">2</span>Tactical Design (bên trong 1 context)</div>
+      <table class="gloss-table">
+        <tr><td>Aggregate</td><td>Cụm object luôn nhất quán cùng nhau (vd. <code>Order</code> + các <code>OrderLine</code>). Mọi thay đổi đi qua Aggregate Root.</td></tr>
+        <tr><td>Aggregate Root</td><td>Object duy nhất bên ngoài được phép truy cập trực tiếp; bảo vệ tính nhất quán cả cụm.</td></tr>
+        <tr><td>Entity</td><td>Object có <b>identity</b> (id) — 2 entity cùng dữ liệu vẫn khác nhau nếu khác id.</td></tr>
+        <tr><td>Value Object</td><td>Object <b>không có identity</b>, định nghĩa qua giá trị (vd. <code>Money(2000, "VND")</code>). 2 value object cùng giá trị = bằng nhau.</td></tr>
+        <tr><td>Invariant</td><td>Quy tắc luôn phải đúng — vd. <code>refund.amount ≤ payment.amount</code>. Aggregate có trách nhiệm bảo vệ.</td></tr>
+        <tr><td>Domain Service</td><td>Logic nghiệp vụ không thuộc về 1 entity cụ thể (vd. <code>RefundEligibilityChecker</code> cần xem cả Order + Payment + Customer).</td></tr>
+        <tr><td>Application Service</td><td>Lớp orchestrate use case — gọi domain service, mở transaction, publish event. KHÔNG chứa business rule.</td></tr>
+        <tr><td>Repository</td><td>Interface kiểu "kho lưu trữ aggregate" — domain layer dùng abstraction, infrastructure cung cấp impl thật (Postgres, Mongo...).</td></tr>
+        <tr><td>Anemic Domain Model</td><td>Anti-pattern: aggregate chỉ có getter/setter, logic dồn về service. Mất tinh thần OOP/DDD — chỉ là CRUD trá hình.</td></tr>
+      </table>
+    </div>
+
+    <!-- 3 -->
+    <div class="gloss-grp">
+      <div class="gloss-grp-h"><span class="num">3</span>Event-driven &amp; Discovery</div>
+      <table class="gloss-table">
+        <tr><td>Event Storming</td><td>Workshop trên tường để Domain Expert + dev cùng liệt kê <b>sự kiện đã/sẽ xảy ra</b> trong nghiệp vụ theo timeline.</td></tr>
+        <tr><td>Domain Event</td><td>Sự việc đã xảy ra trong miền nghiệp vụ (vd. <code>RefundCompleted</code>). Bất biến, dùng quá khứ phân từ.</td></tr>
+        <tr><td>Command</td><td>Yêu cầu thay đổi state — có thể bị từ chối (vd. <code>RequestRefund</code>). Dùng động từ chỉ định.</td></tr>
+        <tr><td>Actor</td><td>Người/hệ thống khởi tạo command (Customer, Manager, Cron Job...).</td></tr>
+        <tr><td>Policy</td><td>Quy tắc tự động: "khi event X xảy ra → command Y" (vd. <i>Khi RefundCompleted → gửi email</i>).</td></tr>
+        <tr><td>Read Model</td><td>View dữ liệu được tối ưu để đọc (CQRS) — khác với write model của aggregate.</td></tr>
+      </table>
+    </div>
+
+    <!-- 4 -->
+    <div class="gloss-grp">
+      <div class="gloss-grp-h"><span class="num">4</span>Ngôn ngữ chung</div>
+      <table class="gloss-table">
+        <tr><td>Ubiquitous Language</td><td>"Ngôn ngữ chung khắp mọi nơi" — tập từ ngữ thống nhất giữa biz + dev + AI, dùng nhất quán trong code/test/doc/commit.</td></tr>
+        <tr><td>Glossary</td><td>File text liệt kê + định nghĩa các term của Ubiquitous Language. Source of truth.</td></tr>
+        <tr><td>Language Drift</td><td>Tình trạng AI/dev tự sinh từ ngoài glossary (vd. <code>cancel_refund</code> thay vì <code>reject_refund</code>) — cần linter chặn.</td></tr>
+        <tr><td>Refactoring toward Deeper Insight</td><td>Khi nhận ra mô hình hiện tại sai bản chất, refactor cả model + ngôn ngữ — KHÔNG patch code lấy lệ.</td></tr>
+      </table>
+    </div>
+
+    <!-- 5 -->
+    <div class="gloss-grp">
+      <div class="gloss-grp-h"><span class="num">5</span>Layering &amp; Architecture</div>
+      <table class="gloss-table">
+        <tr><td>Domain layer</td><td>Code thuần nghiệp vụ — KHÔNG được import infrastructure.</td></tr>
+        <tr><td>Application layer</td><td>Orchestration, transaction, publish event. Mỏng.</td></tr>
+        <tr><td>Infrastructure layer</td><td>Adapter cụ thể: Postgres repo, EventBridge publisher, Stripe SDK...</td></tr>
+        <tr><td>Interface layer</td><td>Entry point: REST API handler, SQS consumer, CLI.</td></tr>
+        <tr><td>ADR (Architectural Decision Record)</td><td>File ngắn ghi 1 quyết định kiến trúc lớn: context · decision · consequences. Bất biến (không sửa, chỉ supersede).</td></tr>
+      </table>
+    </div>
+
+    <!-- 6 -->
+    <div class="gloss-grp">
+      <div class="gloss-grp-h"><span class="num">6</span>Test &amp; Quality</div>
+      <table class="gloss-table">
+        <tr><td>TDD (RED → GREEN → REFACTOR)</td><td>Viết test fail trước (RED), code đến khi pass (GREEN), refactor giữ nguyên test pass.</td></tr>
+        <tr><td>Specification by Example / BDD</td><td>Test viết dạng <code>Given-When-Then</code> bằng ngôn ngữ glossary — Domain Expert đọc được.</td></tr>
+        <tr><td>Contract Test (Pact)</td><td>Test đảm bảo schema event/API giữa producer và consumer khớp nhau — không phá khi deploy độc lập.</td></tr>
+        <tr><td>Schema Registry</td><td>Dịch vụ lưu version schema event (vd. AWS Glue Schema Registry) — enforce <b>BACKWARD compatibility</b> = consumer cũ vẫn đọc được data mới.</td></tr>
+      </table>
+    </div>
+
+    <!-- 7 -->
+    <div class="gloss-grp">
+      <div class="gloss-grp-h"><span class="num">7</span>Pipeline &amp; Deploy (V3)</div>
+      <table class="gloss-table">
+        <tr><td>Plan Review Gate</td><td>Human checkpoint giữa writing-plans và executing-plans — bắt developer tick checklist + đặt <code>Overall Decision: OK</code> mới được code.</td></tr>
+        <tr><td>Spike</td><td>Nhánh PoC ngắn (≤ 1 ngày) để validate giả định kỹ thuật rủi ro. Code <b>không merge</b>, chỉ giữ <code>findings.md</code>.</td></tr>
+        <tr><td>Compliance Gate</td><td>Bộ kiểm SAST + DAST + SBOM + license + PII trước khi merge — block PR nếu vi phạm GDPR/PCI.</td></tr>
+        <tr><td>SBOM (Software Bill of Materials)</td><td>Danh sách đầy đủ dependency + version + license của artifact, để audit lỗ hổng.</td></tr>
+        <tr><td>SAST / DAST</td><td>Static / Dynamic Application Security Testing — quét code (static) + runtime (dynamic).</td></tr>
+        <tr><td>PII (Personally Identifiable Information)</td><td>Dữ liệu nhận dạng cá nhân (email, số CCCD, thẻ...) — phải mask/encrypt theo GDPR.</td></tr>
+        <tr><td>Canary Deployment</td><td>Deploy phiên bản mới cho 5% traffic trước, theo dõi SLO, mới nâng dần lên 25/50/100%.</td></tr>
+        <tr><td>Feature Flag</td><td>Cờ bật/tắt tính năng theo segment user (LaunchDarkly, Unleash) — tách deploy code khỏi release feature.</td></tr>
+        <tr><td>SLO (Service Level Objective)</td><td>Mục tiêu chất lượng đo được (P95 latency &lt; 500ms, error rate &lt; 0.1%).</td></tr>
+        <tr><td>Error Budget</td><td>Phần "chấp nhận lỗi" còn lại trong period. Cạn → cấm release tính năng mới, ưu tiên fix.</td></tr>
+        <tr><td>Auto-rollback</td><td>Tự động revert deploy khi SLO breach trong canary window — không cần human.</td></tr>
+      </table>
+    </div>
+
+    <!-- 8 -->
+    <div class="gloss-grp">
+      <div class="gloss-grp-h"><span class="num">8</span>CDK &amp; AWS</div>
+      <table class="gloss-table">
+        <tr><td>AWS CDK</td><td>Framework code-as-infrastructure dùng TypeScript/Python để định nghĩa AWS resource (compile xuống CloudFormation).</td></tr>
+        <tr><td>CDK Stack</td><td>Đơn vị deploy độc lập trong CDK = 1 CloudFormation stack.</td></tr>
+        <tr><td>NestedStack</td><td>Stack con trong stack cha — vẫn deploy cùng nhưng tách logic file riêng.</td></tr>
+        <tr><td>CDK Construct</td><td>Block code reusable kiểu component (vd. <code>ServiceConstruct</code> dùng cho Billing/Identity/Notification).</td></tr>
+        <tr><td><code>cdk diff</code></td><td>Preview thay đổi trước khi deploy (kiểu git diff cho infra).</td></tr>
+        <tr><td><code>cdk deploy</code></td><td>Apply thay đổi qua CloudFormation — UPDATE_COMPLETE/CREATE_COMPLETE/ROLLBACK.</td></tr>
+        <tr><td>EventBridge</td><td>Bus event của AWS — Billing publish event, Notification subscribe.</td></tr>
+        <tr><td>ECS Fargate</td><td>Chạy container không cần quản lý EC2 server (serverless container).</td></tr>
+        <tr><td>Aurora Postgres ServerlessV2</td><td>Postgres managed của AWS, scale capacity (ACU) tự động theo tải.</td></tr>
+      </table>
+    </div>
+
+    <!-- 9 -->
+    <div class="gloss-grp">
+      <div class="gloss-grp-h"><span class="num">9</span>AI Tooling</div>
+      <table class="gloss-table">
+        <tr><td>Claude Code CLI</td><td>Coding agent của Anthropic chạy trong terminal — interactive, có quyền đọc/sửa file + chạy lệnh.</td></tr>
+        <tr><td>Skill</td><td>Module hướng dẫn AI làm 1 việc cụ thể theo kỷ luật (vd. <code>superpowers:writing-plans</code>).</td></tr>
+        <tr><td>OpenSpec</td><td>Bộ skill quản lý spec dạng version-controlled change proposal (proposal → apply → archive).</td></tr>
+        <tr><td>Superpowers</td><td>Bộ skill cho coding workflow có kỷ luật (brainstorm · plan · TDD · execute · review).</td></tr>
+        <tr><td>Subagent</td><td>AI agent con được spawn từ session chính, có context riêng — dùng cho task song song hoặc review độc lập.</td></tr>
+        <tr><td>Hook (Claude Code)</td><td>Lệnh tự chạy theo trigger (preToolUse, postToolUse, sessionStart...) — vd. pre-commit lint.</td></tr>
+      </table>
+    </div>
+
+  </section>
 
   <div class="foot">
     DDD-Aware SDLC · V3 &mdash; Production-Ready Pipeline · 13 upgrades + Fast Lane · Claude Code + OpenSpec + Superpowers
