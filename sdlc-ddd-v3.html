@@ -1434,21 +1434,21 @@ flowchart TB
 
   // ────────────── Plain-Vietnamese summary per node ──────────────
   const PURPOSES = {
-    USER: "Product Owner viết yêu cầu thô (pain point, compliance constraint) thành ticket có acceptance criteria rõ — đầu vào của cả pipeline.",
-    DISC: "<b>Buổi Research</b> với người am hiểu nghiệp vụ. AI dẫn dắt liệt kê sự kiện · ràng buộc · thuật ngữ · quan hệ giữa service. Output là <b>1 tài liệu duy nhất</b> <code>docs/domain.md</code> gộp glossary + events + integration map — dev đọc 1 file là đủ, AI dùng làm system prompt khi code.",
-    PS:   "<b>Architecture Plan</b>: vẽ ranh giới service, integration pattern (REST · async event), SLA, fallback khi downstream service down. Quyết định lớn ghi thành <b>ADR</b> — đính kèm tài liệu, không phải code.",
-    PT:   "<b>Implementation Plan</b>: chia tính năng thành ~12 task nhỏ, mỗi task có acceptance test cụ thể. Cần human OK qua <b>plan-review-gate</b> mới được execute. Đây là plan dev đọc thẳng để code, không cần hiểu DDD lý thuyết.",
-    DEV:  "Execute plan từng task. Bám <b>TDD: RED → GREEN → REFACTOR</b>. Task xong → tick trong <code>tasks.md</code>. Cấu trúc thư mục theo project convention (vd. <code>domain/service/api/</code> hoặc <code>features/</code>) — dev không cần thuộc DDD pattern, chỉ cần follow folder layout.",
-    LINT: "Pre-commit hook chạy <b>linter chuẩn</b>: ESLint · Prettier · gitleaks (secret scan) · simple security check. Block commit nếu fail — bắt fix tại chỗ, không bypass <code>--no-verify</code>.",
-    SBE:  "Viết <code>.feature</code> dạng <b>Given-When-Then</b> theo acceptance criteria. Dùng từ ngữ tự nhiên (có thể tham chiếu glossary nếu muốn) — QA không biết code vẫn đọc và review được scenario.",
-    UIT:  "Chạy <b>unit + integration + E2E</b> test. Fail → pipeline auto loop ngược về Developer (3 → 2).",
-    CT:   "<b>Consumer-driven contract test</b> bằng Pact: đảm bảo event/API schema không phá các service đang consume khi deploy độc lập. Pass = safe to deploy.",
-    CR:   "Code Reviewer kiểm chất lượng kỹ thuật + readability + security: race condition, secret leak, SQL injection, performance, naming — như code review truyền thống. <b>Không kiểm DDD theory</b>.",
-    CMP:  "<b>Compliance &amp; Security Gate</b>: chạy SAST (Snyk/Semgrep) · DAST · SBOM (Syft) · license scan · PII data classification · GDPR/PCI check. Block PR nếu critical CVE hoặc secret/PII rò rỉ.",
-    PR:   "AI sinh conventional commit, push branch, mở PR đính kèm test plan + link spec + ADR. CI build image &amp; push ECR; chạy <code>cdk diff</code> review hạ tầng; merge → <b>CDK deploy</b> các stack qua CodePipeline; ECS Fargate staging chờ manual approval cho prod.",
-    ROLL: "<b>Gradual Rollout</b>: bật feature flag (LaunchDarkly), route canary 5% → 25% → 50% → 100% theo SLO check (P95 latency, error rate, completion rate). Breach SLO → <b>auto-rollback</b> qua CodeDeploy + revert flag.",
-    SY:   "Post-merge: archive spec change, apply delta vào <code>docs/domain.md</code> (gộp glossary + events + integration), register event schema lên <b>Glue Schema Registry</b> với enforce BACKWARD compatibility — knowledge sync cho sprint sau.",
-    OPS:  "<b>Operate phase</b>: SLO monitoring 24/7, error budget tracking, oncall alerting (PagerDuty), runbook tự động. Khi có incident → root cause → tạo <b>incident report</b>, nếu phát hiện edge case nghiệp vụ mới thì feed vào Research sprint sau."
+    USER: "Product Owner viết yêu cầu nghiệp vụ thành ticket có <b>tiêu chí nghiệm thu rõ</b> (cái gì được coi là xong) — đầu vào của cả pipeline.",
+    DISC: "Buổi <b>research với người am hiểu nghiệp vụ</b>. AI dẫn dắt liệt kê: việc gì xảy ra, ràng buộc nào, thuật ngữ ra sao, các service tương tác thế nào. Output gói gọn vào <b>1 file <code>docs/domain.md</code></b> — dev đọc 1 file là đủ context, AI cũng đọc file này khi code.",
+    PS:   "Chốt <b>cách các service nói chuyện với nhau</b> (gọi API trực tiếp hay gửi message qua event bus?), <b>thời gian xử lý mong muốn</b>, và <b>xử lý ra sao khi service phụ thuộc bị lỗi</b>. Mỗi quyết định lớn lưu thành 1 file <b>ADR</b> ngắn để 6 tháng sau đọc lại vẫn hiểu vì sao chọn vậy.",
+    PT:   "Chia tính năng thành <b>~12 task nhỏ</b>, mỗi task có test cụ thể (input → kết quả mong đợi). Cần <b>người duyệt checklist</b> mới được code (gate). Plan dev đọc thẳng để bắt tay code, không cần hiểu lý thuyết.",
+    DEV:  "Code từng task theo plan. Mỗi task làm theo <b>3 bước TDD</b>:<br>• <b>RED</b> · viết test trước, để test fail<br>• <b>GREEN</b> · code đến khi test pass<br>• <b>REFACTOR</b> · dọn lại code cho gọn, test vẫn pass<br>Xong task tick vào <code>tasks.md</code>. Theo đúng cấu trúc thư mục có sẵn của project.",
+    LINT: "Hook tự chạy khi commit: kiểm <b>style code</b> (ESLint · Prettier), <b>quét lộ secret</b> (gitleaks), kiểm syntax. Fail → commit bị chặn, fix tại chỗ rồi commit lại.",
+    SBE:  "Viết <b>kịch bản test acceptance</b> dạng <i>'Cho ... · Khi ... · Thì ...'</i> (Given-When-Then). Viết bằng tiếng tự nhiên — QA và PO không biết code vẫn đọc, review được.",
+    UIT:  "Chạy 3 loại test:<br>• <b>unit</b> — test function/class riêng lẻ<br>• <b>integration</b> — test với DB thật<br>• <b>E2E</b> — test luồng từ user click đến kết quả<br>Test fail → pipeline tự gửi ngược về dev fix.",
+    CT:   "Test đảm bảo <b>schema event/API mình publish không phá các service đang consume</b> khi deploy. Dùng tool Pact. Pass = an toàn deploy.",
+    CR:   "Reviewer kiểm <b>chất lượng code</b>: có race condition không, có lộ secret không, có SQL injection không, performance ổn không, đặt tên có rõ không — như code review thông thường.",
+    CMP:  "<b>Bộ kiểm bảo mật + tuân thủ</b> trước khi merge:<br>• quét lỗ hổng code (SAST)<br>• test runtime (DAST)<br>• liệt kê dependency &amp; license (SBOM)<br>• kiểm dữ liệu cá nhân theo GDPR/PCI<br>Có lỗi nặng → chặn PR.",
+    PR:   "AI viết <b>commit message chuẩn</b>, push branch, mở PR có đầy đủ test plan + link tài liệu + ADR. CI build Docker image đẩy lên ECR. Hạ tầng được preview bằng <code>cdk diff</code> trước khi apply lên staging. Lên prod cần người duyệt thủ công.",
+    ROLL: "Bật <b>feature flag</b> (LaunchDarkly) rồi <b>đẩy traffic dần dần</b>: 5% → 25% → 50% → 100%. Trong khi đẩy, theo dõi 3 chỉ số (latency, tỷ lệ lỗi, tỷ lệ thành công). Có chỉ số nào vượt ngưỡng → <b>tự động rollback</b>.",
+    SY:   "Sau khi merge: lưu spec change vào archive, cập nhật <code>docs/domain.md</code> với term/event mới, đăng ký schema event lên Glue Schema Registry. Đảm bảo team sau biết được những gì đã thay đổi.",
+    OPS:  "Theo dõi service 24/7. Có vấn đề thì PagerDuty báo oncall. Khi có <b>incident</b> → tìm root cause → viết <b>incident report</b>. Nếu phát hiện trường hợp nghiệp vụ chưa nghĩ tới → đưa vào <b>Research sprint sau</b> để bổ sung domain.md."
   };
 
   // ────────────── Artifact icons (SVG by lang) ──────────────
