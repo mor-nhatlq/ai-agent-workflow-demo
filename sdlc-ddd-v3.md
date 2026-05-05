@@ -23,73 +23,138 @@ Pipeline đặt **domain model** vào trung tâm chứ không phải code. Mọi
 ### 1.3. Project layout
 
 ```
-ddd-platform/                    # monorepo
+ddd-platform/                          # monorepo
 ├── services/
-│   ├── billing/                 # Bounded Context · Billing
-│   ├── identity/                # Bounded Context · Identity
-│   └── notification/            # Bounded Context · Notification
+│   ├── billing/                       # Bounded Context · Billing
+│   │   └── infra/                     # service-level CDK stacks
+│   ├── identity/                      # Bounded Context · Identity
+│   └── notification/                  # Bounded Context · Notification
 ├── shared/
-│   ├── glossary.md              # Ubiquitous Language
-│   ├── context-map.yaml         # quan hệ giữa contexts
-│   ├── adr/                     # Architectural Decision Records
-│   └── schemas/                 # AsyncAPI / JSON-Schema
-├── infra/                       # Cross-service AWS infra
-│   ├── eventbridge/
-│   ├── api-gateway/
-│   └── networking/
+│   ├── glossary.md                    # Ubiquitous Language
+│   ├── context-map.yaml               # quan hệ giữa contexts
+│   ├── adr/                           # Architectural Decision Records
+│   └── schemas/                       # AsyncAPI / JSON-Schema
+├── infra-cdk/                         # AWS CDK app · TypeScript
+│   ├── bin/
+│   │   └── app.ts                     # CDK entry · stage prod/staging
+│   ├── lib/
+│   │   ├── platform/                  # cross-service stacks
+│   │   │   ├── networking-stack.ts    # VPC · subnets · SGs
+│   │   │   ├── event-bus-stack.ts     # EventBridge bus + rules
+│   │   │   ├── api-gateway-stack.ts   # shared HTTP API + Cognito
+│   │   │   └── schema-registry-stack.ts  # Glue Schema Registry
+│   │   └── shared/                    # reusable constructs
+│   │       ├── service.construct.ts
+│   │       └── observability.construct.ts
+│   ├── cdk.json
+│   └── package.json
 ├── openspec/
-│   ├── specs/                   # spec hiện tại
-│   ├── changes/                 # proposals đang làm
-│   └── archive/                 # changes đã merge
-├── .github/workflows/           # CI · arch-lint · contract-test
+│   ├── specs/                         # spec hiện tại
+│   ├── changes/                       # proposals đang làm
+│   └── archive/                       # changes đã merge
+├── .github/workflows/                 # CI · arch-lint · contract-test · cdk diff
 └── .claude/
-    ├── settings.json            # hooks, permissions
-    ├── hooks/                   # pre-commit lint:arch · lint:glossary
-    └── skills/                  # custom domain skills
+    ├── settings.json                  # hooks, permissions
+    ├── hooks/                         # pre-commit lint:arch · lint:glossary
+    └── skills/                        # custom domain skills
 ```
 
-Mỗi service (per bounded context) layer theo DDD:
+Mỗi service (per bounded context) layer theo DDD và có CDK stacks riêng:
 
 ```
 services/billing/
 ├── src/billing/
-│   ├── domain/                  # thuần nghiệp vụ — KHÔNG import infra
-│   │   ├── refund_request.py    # Aggregate root
+│   ├── domain/                        # thuần nghiệp vụ — KHÔNG import infra
+│   │   ├── refund_request.py          # Aggregate root
 │   │   ├── value_objects/
 │   │   ├── events/
-│   │   └── services/            # Domain Service (vd. RefundEligibilityChecker)
-│   ├── application/             # orchestration, transactions
-│   ├── infrastructure/          # adapters cụ thể
+│   │   └── services/                  # Domain Service (vd. RefundEligibilityChecker)
+│   ├── application/                   # orchestration, transactions
+│   ├── infrastructure/                # adapters cụ thể (code-level)
 │   │   ├── repositories/
-│   │   ├── adapters/            # ACL ra context khác
-│   │   └── events/              # EventBridge publisher
-│   └── interface/               # entry points
-│       ├── api/                 # REST handlers
-│       └── consumers/           # SQS event consumers
+│   │   ├── adapters/                  # ACL ra context khác
+│   │   └── events/                    # EventBridge publisher
+│   └── interface/                     # entry points
+│       ├── api/                       # REST handlers
+│       └── consumers/                 # SQS event consumers
 ├── tests/
-├── features/                    # BDD scenarios (.feature)
-├── pacts/                       # consumer-driven contracts
-├── infra/                       # service-specific AWS CDK
+├── features/                          # BDD scenarios (.feature)
+├── pacts/                             # consumer-driven contracts
+├── infra/                             # SERVICE-LEVEL CDK STACKS
+│   ├── billing-stack.ts               # composite root stack
+│   ├── billing-database-stack.ts      # Aurora Postgres ServerlessV2
+│   ├── billing-service-stack.ts       # ECS Fargate + ALB target
+│   ├── billing-pipeline-stack.ts      # CodePipeline + CodeBuild
+│   └── billing-observability-stack.ts # CloudWatch · X-Ray · Datadog
 ├── Dockerfile
 └── pyproject.toml
 ```
 
-### 1.4. AWS deploy target
+### 1.4. AWS deploy target — biểu diễn dưới dạng CDK stacks
 
-| Service | Vai trò |
+Toàn bộ hạ tầng AWS được code-as-infrastructure bằng **AWS CDK (TypeScript)**, tách thành stack hierarchy theo bounded context:
+
+```
+CDK App (infra-cdk/bin/app.ts)
+│
+├── Stage: ddd-platform-prod
+│   │
+│   ├── PlatformStack                       # shared · deploy 1 lần per env
+│   │   ├── NetworkingStack                 # VPC · 3 AZ · NAT · SGs
+│   │   ├── EventBusStack                   # EventBridge "app-events"
+│   │   ├── ApiGatewayStack                 # shared HTTP API · Cognito
+│   │   └── SchemaRegistryStack             # Glue Schema Registry · BACKWARD
+│   │
+│   ├── BillingStack                        # composite per bounded context
+│   │   ├── BillingDatabaseStack            # Aurora Postgres v15 · ACU 4-8
+│   │   ├── BillingServiceStack             # ECS Fargate · ALB · auto-scale 2-10
+│   │   ├── BillingSecretsStack             # Secrets Manager · rotate 30d
+│   │   ├── BillingObservabilityStack       # CW logs · X-Ray · Datadog · alarms
+│   │   └── BillingPipelineStack            # CodePipeline · CodeBuild · ECR
+│   │
+│   ├── IdentityStack                       # mirror BillingStack composition
+│   └── NotificationStack
+│
+└── Stage: ddd-platform-staging             # clone prod · smaller capacity
+    └── (mirror prod stacks)
+```
+
+**Dependency order** (CDK auto-resolve):
+- `PlatformStack` → `BillingStack` (Billing import VPC, EventBus, ApiGateway từ Platform)
+- `BillingDatabaseStack` → `BillingServiceStack` (service inject DB endpoint)
+- `BillingPipelineStack` independent — deploy/destroy không phụ thuộc service
+
+**Deploy commands**:
+```bash
+cd infra-cdk
+npx cdk diff   ddd-platform-staging/BillingStack/*
+npx cdk deploy ddd-platform-staging/BillingStack/* --require-approval=never
+
+# After staging green + manual approval:
+npx cdk deploy ddd-platform-prod/BillingStack/*    --require-approval=any-change
+```
+
+**Mapping CDK stacks → AWS services**:
+
+| CDK Stack | AWS Resources |
 |---|---|
-| API Gateway | REST entrypoint · OAuth2 + Cognito JWT |
-| ALB + ECS Fargate | Service container · auto-scale 2–10 task |
-| RDS Aurora Postgres | DB · Multi-AZ · point-in-time recovery · IAM auth |
-| EventBridge | Cross-context bus · topic versioning (`billing.refund.v1`) |
-| SQS + SNS | Async fan-out · DLQ với redrive policy |
-| Glue Schema Registry | Event schema versioning · enforce BACKWARD compatibility |
-| ECR | Container registry · image scan |
-| Secrets Manager | Credentials · auto-rotate 30d |
-| CloudWatch + X-Ray | Logs · trace mỗi refund end-to-end |
-| CodePipeline + CodeBuild | CI/CD · build → contract test → staging → manual approval → prod |
-| LaunchDarkly | Feature flag cho gradual rollout |
-| Datadog + PagerDuty | SLO monitoring · oncall |
+| `NetworkingStack` (Platform) | VPC · 3 AZ · public/private/isolated subnet · NAT · SGs |
+| `EventBusStack` (Platform) | EventBridge bus `app-events` + rules → SQS Notification |
+| `ApiGatewayStack` (Platform) | HTTP API + Cognito JWT authorizer |
+| `SchemaRegistryStack` (Platform) | Glue Schema Registry · BACKWARD compatibility |
+| `BillingDatabaseStack` | Aurora Postgres ServerlessV2 · IAM auth · point-in-time recovery |
+| `BillingServiceStack` | ECS Fargate Task + ALB Target Group · auto-scale 2-10 |
+| `BillingSecretsStack` | Secrets Manager · DB password · Stripe key · rotate 30d |
+| `BillingObservabilityStack` | CloudWatch Log Group + Metric Filters · X-Ray · Datadog forwarder · SLO alarms |
+| `BillingPipelineStack` | CodePipeline + CodeBuild + ECR repository · image scan |
+| `NotificationServiceStack` | SQS + DLQ · redrive 3 attempts · alarm DLQ > 0 |
+
+**Tooling đi kèm**:
+
+| Tool | Vai trò |
+|---|---|
+| LaunchDarkly | Feature flag cho gradual rollout (Phase 5.5) |
+| Datadog + PagerDuty | SLO monitoring · oncall (Phase 6) |
 
 ---
 
@@ -365,14 +430,15 @@ USER                │   ┌──────┐    ┌──────┐  
 
 ### 4.13. PR · Commit + PR + Deploy Staging (Phase 5 · upgrade G)
 
-**Node làm gì?** AI sinh conventional commit, push branch, mở PR đính kèm test plan + link OpenSpec change + ADR. CI build image → push ECR; merge → CodePipeline auto-deploy ECS Fargate (staging) chờ manual approval cho prod.
+**Node làm gì?** AI sinh conventional commit, push branch, mở PR đính kèm test plan + link OpenSpec change + ADR. CI build image → push ECR. Chạy `cdk diff` để review thay đổi hạ tầng. Merge → **CDK deploy** các stack (BillingDatabaseStack/ServiceStack/ObservabilityStack/PipelineStack) tự động lên staging. Prod cần manual approval + `cdk deploy ddd-platform-prod/...`.
 
 | | |
 |---|---|
 | **Input** | Code đã APPROVED bởi cả CR + CMP + DMR |
-| **AI Activity** | `commit-commands:commit-push-pr` → `gh pr create` → CodeBuild → CodePipeline |
-| **Lệnh CLI** | `> /commit-commands:commit-push-pr` |
-| **Output** | Conventional commit · PR #1287 · ECR image · ECS task definition · `infra/billing-stack.ts` (CDK) |
+| **AI Activity** | `commit-commands:commit-push-pr` → `gh pr create` → CodeBuild → `cdk diff` → `cdk deploy` |
+| **Lệnh CLI** | `> /commit-commands:commit-push-pr` rồi `npx cdk deploy ddd-platform-staging/BillingStack/*` |
+| **Output** | Conventional commit · PR #1287 · ECR image · CDK CloudFormation stacks · ECS task definition |
+| **CDK artifacts** | `infra-cdk/bin/app.ts` · `services/billing/infra/billing-stack.ts` (composite) · `billing-service-stack.ts` (NestedStack) |
 
 ---
 
